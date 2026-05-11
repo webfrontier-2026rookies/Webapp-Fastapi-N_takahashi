@@ -2,6 +2,19 @@ body {
     text-align: center;
 }
 
+.fix {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.fix form {
+    display: flex;
+    gap: 5px;
+    margin: 0;
+}
+
 /* ボタン */
 button {
     text-align: center;
