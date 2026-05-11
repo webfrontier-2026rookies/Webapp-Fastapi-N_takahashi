@@ -3,6 +3,7 @@ services:
     image: postgres:15
     container_name: fastapi_db
     restart: always
+    stop_grace_period: 1m30s
     environment:
       POSTGRES_USER: n_takahashi
       POSTGRES_PASSWORD: password
@@ -17,5 +18,7 @@ services:
       - db
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     environment:
       DATABASE_URL: postgresql://n_takahashi:password@db:5432/todo_db
