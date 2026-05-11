@@ -7,10 +7,14 @@
     <link rel="stylesheet" href="{{ url_for('static', path='/todo_list.css') }}">
 </head>
 <body>
-    <form method="get">
-        <input type="text" name="keyword" placeholder="キーワードを入力" required>
-        <button type="submit">検索</button>
-    </form>
+    <div class="fix">
+        <form method="get">
+            <input type="text" name="keyword" placeholder="キーワードを入力" required>
+            <button type="submit">検索</button>
+        </form>
+
+        <button class="create">作成</button>
+    </div>
 
     <p>全{total_count}件/{current_count}件</p>
 
