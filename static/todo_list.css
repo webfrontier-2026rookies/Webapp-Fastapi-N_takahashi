@@ -1,0 +1,52 @@
+body {
+    text-align: center;
+}
+
+/* ボタン */
+button {
+    text-align: center;
+    background-color: blue;
+    color: white;
+    width: 80px;
+    border-radius: 5px; 
+    height: 25px;
+    border: none;
+}
+
+button:hover {
+    background-color: rgb(71, 71, 218);
+}
+
+.button-prev {
+    margin-right: 10px;
+    width: 80px;
+    border-radius: 5px; 
+    height: 25px;
+    margin-top: 15px;
+}
+
+.button-next {
+    width: 80px;
+    border-radius: 5px; 
+    height: 25px;
+    margin-top: 15px;
+}
+
+.form.button {
+    margin-left: 50px;
+}
+
+
+form {
+    margin: auto;
+    display: flex;
+    width: 300px;
+    height: 30px;
+    justify-content: center;
+    align-items: center;
+}
+
+table {
+    margin: auto;
+}
+

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todoリストの一覧</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/todo_list.css') }}">
+</head>
+<body>
+    <form method="get">
+        <input type="text" name="keyword" placeholder="キーワードを入力" required>
+        <button type="submit">検索</button>
+    </form>
+
+    <p>全{total_count}件/{current_count}件</p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>タイトル</th>
+                <th>詳細</th>
+                <th>期限日</th>
+                <th>ステータス</th>
+                <th>タグ</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for todo in todo_list %}
+            <tr>
+                <td>{{ todo.id }}</td>
+                <td>{{ todo.title }}</td>
+                <td>{{ todo.description }}</td>
+                <td>{{ todo.due_date }}</td>
+                <td>{{ todo.status }}</td>
+                <td>{{ todo.tag }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6">該当するTodoが見つかりません。</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <button class="button-prev">戻る</button>
+    <button class="button-next">進む</button>
+</body>
+</html>
