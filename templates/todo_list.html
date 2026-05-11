@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todoリストの一覧</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/todo_list.css') }}">
 </head>
 <body>
     <form method="get">
         <input type="text" name="keyword" placeholder="キーワードを入力" required>
-        <button type="submit">検索<img src="/static/search.png" alt="検索イラスト"></button>
+        <button type="submit">検索</button>
     </form>
 
-    <p>全{total_count}件</p>
+    <p>全{total_count}件/{current_count}件</p>
 
-    <table>
+    <table border="1">
         <thead>
             <tr>
                 <th>ID</th>
@@ -21,7 +22,7 @@
                 <th>詳細</th>
                 <th>期限日</th>
                 <th>ステータス</th>
-                <th>{{ tag }}</th>
+                <th>タグ</th>
             </tr>
         </thead>
 
@@ -43,7 +44,7 @@
         </tbody>
     </table>
 
-    <button>戻る</button>
-    <button>進む</button>
+    <button class="button-prev">戻る</button>
+    <button class="button-next">進む</button>
 </body>
 </html>
