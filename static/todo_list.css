@@ -63,3 +63,14 @@ table {
     margin: auto;
 }
 
+.header-link {
+    display: block;      
+    color: inherit;      /* 文字の色をthの元の色（黒など）に合わせる */
+    text-decoration: none; 
+    width: 100%;
+    height: 100%;
+}
+
+.header-link:hover {
+    background-color: #eee; 
+}
