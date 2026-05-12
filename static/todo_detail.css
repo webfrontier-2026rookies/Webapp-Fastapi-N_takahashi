@@ -1,0 +1,27 @@
+body {
+    text-align: center;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr; /* 左列を120px、右列を残り全部に設定 */
+    gap: 15px; /* 項目間のすきま */
+    max-width: 500px;
+    text-align: center;
+    margin: 0 auto;
+    margin-top: 100px;
+}
+
+.label {
+    font-weight: bold;
+    color: #555;
+}
+
+.value {
+    color: #333;
+}
+
+button {
+    margin-top: 20px;
+    
+}
