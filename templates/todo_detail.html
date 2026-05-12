@@ -11,6 +11,9 @@
         <div class="label">タイトル</div>
         <div class="value">{{ todo.title }}</div>
 
+        <div class="label">作成日時</div>
+        <div class="value">{{ todo.created_at }}</div>
+
         <div class="label">詳細</div>
         <div class="value">{{ todo.description }}</div>
 
@@ -22,6 +25,15 @@
 
         <div class="label">タグ</div>
         <div class="value">{{ todo.tag }}</div>
+
+        <div class="label">リンク</div>
+        <div class="value">
+            <a href="{{ todo.link }}" target="_blank">リンク</a>
+        </div>
+
+        <div class="label">メモ</div>
+        <div class="value">{{ todo.memo }}</div>
+
     </div>
 
     <button class="button-back" onclick="window.location.href='/'">一覧に戻る</button>

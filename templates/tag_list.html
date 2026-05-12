@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タグ一覧</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/tag_list.css') }}">
+</head>
+<body>
+    <div class="fix">
+        <form method="get">
+            <input type="text" name="keyword" placeholder="キーワードを入力" required>
+            <button type="submit">検索</button>
+        </form>
+
+        <button class="create">作成</button>
+    </div>
+
+    <p>全{total_count}件/{current_count}件</p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>タイトル</th>
+                <th>作成日時</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for tag in tag_list %}
+            <tr>
+                <td>{{ tag.id }}</td>
+                <td>{{ tag.title }}</td>
+                <td>{{ tag.created_at }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">タグが見つかりません。</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <button class="button-prev">戻る</button>
+    <button class="button-next">進む</button>
+</body>
+</html>
