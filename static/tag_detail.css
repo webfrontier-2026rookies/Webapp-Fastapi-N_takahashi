@@ -22,16 +22,12 @@ body {
 }
 
 button {
-    margin-top: 20px;
-    
-}
-
-button {
     text-align: center;
     background-color: blue;
     color: white;
     border-radius: 5px; 
     border: none;
+    margin-top: 20px;
 }
 
 button:hover {
