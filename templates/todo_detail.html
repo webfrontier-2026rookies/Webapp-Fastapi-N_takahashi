@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>todo詳細</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/todo_detail.css') }}">
+</head>
+<body>
+    <div class="detail-grid">
+        <div class="label">タイトル</div>
+        <div class="value">{{ todo.title }}</div>
+
+        <div class="label">詳細</div>
+        <div class="value">{{ todo.description }}</div>
+
+        <div class="label">期限</div>
+        <div class="value">{{ todo.due_date }}</div>
+
+        <div class="label">ステータス</div>
+        <div class="value">{{ todo.status }}</div>
+
+        <div class="label">タグ</div>
+        <div class="value">{{ todo.tag }}</div>
+    </div>
+
+    <button class="button-back" onclick="window.location.href='/'">一覧に戻る</button>
+</body>
+</html>
