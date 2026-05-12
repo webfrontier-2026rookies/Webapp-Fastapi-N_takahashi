@@ -30,7 +30,9 @@
         {% for todo in todo_list %}
             <tr>
                 <td>{{ todo.id }}</td>
-                <td>{{ todo.title }}</td>
+                <td>
+                    <a href="/todo/{{ todo.title }}">{{ todo.title }}</a>
+                </td>
                 <td>{{ todo.description }}</td>
                 <td>{{ todo.due_date }}</td>
                 <td>{{ todo.status }}</td>
