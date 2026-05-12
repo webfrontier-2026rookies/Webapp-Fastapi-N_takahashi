@@ -37,10 +37,13 @@ async def read_root(request: Request):
 async def get_todo_detail(request: Request, todo_title: str):
     todo_data = {
         "title": todo_title,
+        "created_at": "2026-05-10",
         "description": "これはサンプルの詳細説明です。",
         "due_date": "2026-05-20",
         "status": "進行中",
-        "tag": "仕事"
+        "tag": "仕事",
+        "link": "https://example.com",
+        "memo": "これはサンプルのメモです。"
     }
 
     return templates.TemplateResponse(
@@ -48,3 +51,24 @@ async def get_todo_detail(request: Request, todo_title: str):
         name="todo_detail.html",
         context={"todo": todo_data}
     )
+
+@app.get("/tag")
+async def get_tag_list(request: Request):
+    tag_list = [
+        {
+            "id": 1,
+            "title": "散歩",
+            "created_at": "2025-12-15"
+        },
+        {
+            "id": 2,
+            "title": "買い物",
+            "created_at": "2025-12-16"
+        }
+    ]
+    return templates.TemplateResponse(
+        request=request,         
+        name="tag_list.html",  
+        context={"tag_list": tag_list}
+    )
+ 
