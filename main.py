@@ -71,4 +71,18 @@ async def get_tag_list(request: Request):
         name="tag_list.html",  
         context={"tag_list": tag_list}
     )
- 
+
+@app.get("/tag/{tag_title}")
+async def get_tag_detail(request: Request, tag_title: str):
+    tag_data = {
+        "title": tag_title,
+        "created_at": "2025-12-15",
+        "description": "これはサンプルの詳細説明です。",
+        "usage": "これはサンプルの使用方法です。"
+    }
+
+    return templates.TemplateResponse(
+        request=request,
+        name="tag_detail.html",
+        context={"tag": tag_data}
+    )

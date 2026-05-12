@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todoリストの一覧</title>
+    <title>todo一覧</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/todo_list.css') }}">
 </head>
 <body>
@@ -23,7 +23,6 @@
             <tr>
                 <th>ID</th>
                 <th>タイトル</th>
-                <th>詳細</th>
                 <th>期限日</th>
                 <th>ステータス</th>
                 <th>タグ</th>
@@ -37,7 +36,6 @@
                 <td>
                     <a href="/todo/{{ todo.title }}">{{ todo.title }}</a>
                 </td>
-                <td>{{ todo.description }}</td>
                 <td>{{ todo.due_date }}</td>
                 <td>{{ todo.status }}</td>
                 <td>{{ todo.tag }}</td>

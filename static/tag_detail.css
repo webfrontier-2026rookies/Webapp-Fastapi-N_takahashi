@@ -25,9 +25,7 @@ button {
     text-align: center;
     background-color: blue;
     color: white;
-    width: 80px;
     border-radius: 5px; 
-    height: 25px;
     border: none;
     margin-top: 20px;
 }
@@ -36,3 +34,17 @@ button:hover {
     background-color: rgb(71, 71, 218);
 }
 
+.button-back-top {
+    margin-right: 10px;
+    width: 150px;
+    border-radius: 5px; 
+    height: 25px;
+    margin-top: 15px;
+}
+
+.button-back-tag {
+    width: 80px;
+    border-radius: 5px; 
+    height: 25px;
+    margin-top: 15px;
+}
