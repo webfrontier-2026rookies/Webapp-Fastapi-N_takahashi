@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>タグ一覧</title>
+    <title>tag一覧</title>
     <link rel="stylesheet" href="{{ url_for('static', path='/tag_list.css') }}">
 </head>
 <body>
@@ -30,7 +30,9 @@
         {% for tag in tag_list %}
             <tr>
                 <td>{{ tag.id }}</td>
-                <td>{{ tag.title }}</td>
+                <td>
+                    <a href="/tag/{{ tag.title }}">{{ tag.title }}</a>
+                </td>
                 <td>{{ tag.created_at }}</td>
             </tr>
             {% else %}
