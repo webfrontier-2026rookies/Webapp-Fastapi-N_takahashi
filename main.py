@@ -1,6 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
+from app.detabase import engine, Base, get_db
+from app.models import Item
+
+# アプリ起動時にPostgreSQLにテーブルを作成する
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
