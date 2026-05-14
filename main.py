@@ -1,12 +1,14 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from app.detabase import engine, Base, get_db
-from app.models import Item
+from app.database import engine, Base, get_db
+from app.models import Todo, Tag, TodoTag
+from app.schemas import TodoCreate, TodoUpdate
+from app import crud
 
 # アプリ起動時にPostgreSQLにテーブルを作成する
-Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine,checkfirst=True)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -14,25 +16,18 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/")
 async def read_root(request: Request):
-    todo_list = [
-        {
-            "id": 1, 
-            "title": "買い物", 
-            "description": "卵と牛乳を買う", 
-            "due_date": "2026-05-12", 
-            "status": "未完了", 
-            "tag": "生活"
-        },
-        {
-            "id": 2, 
-            "title": "FastAPIの勉強", 
-            "description": "Jinja2のテンプレートをマスターする", 
-            "due_date": "2026-05-13", 
-            "status": "進行中", 
-            "tag": "学習"
-        }
-    ]
+    db = next(get_db())
+    todo_list = db.query(Todo).all()
+    return templates.TemplateResponse(
+        request=request,
+        name="todo_list.html",
+        context={"todo_list": todo_list}
+    )
 
+@app.get("/todo")
+async def get_todo_list(request: Request):
+    db = next(get_db())
+    todo_list = db.query(Todo).all()
     return templates.TemplateResponse(
         request=request,         
         name="todo_list.html",  
@@ -40,23 +35,14 @@ async def read_root(request: Request):
     )
 
 @app.get("/todo/{todo_title}")
-async def get_todo_detail(request: Request, todo_title: str):
-    todo_data = {
-        "title": todo_title,
-        "created_at": "2026-05-10",
-        "description": "これはサンプルの詳細説明です。",
-        "due_date": "2026-05-20",
-        "status": "進行中",
-        "tag": "仕事",
-        "link": "https://example.com",
-        "memo": "これはサンプルのメモです。"
-    }
+async def get_todo_detail(request: Request, todo_title: str, db: Session = Depends(get_db)):
+        todo_data = crud.get_todo_by_title(db, todo_title)
 
-    return templates.TemplateResponse(
-        request=request,
-        name="todo_detail.html",
-        context={"todo": todo_data}
-    )
+        return templates.TemplateResponse(
+            request=request,
+            name="todo_detail.html",
+            context={"todo": todo_data}
+        )
 
 @app.get("/tag")
 async def get_tag_list(request: Request):
