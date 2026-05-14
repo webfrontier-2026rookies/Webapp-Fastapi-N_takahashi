@@ -13,8 +13,16 @@
         <input type="text" name="title" required>
     </div>
     <div class="form-group">
+        <label>作成日時:</label>
+        <input type="datetime-local" name="created_at">
+    </div>
+    <div class="form-group">
         <label>詳細:</label>
         <textarea name="description" required></textarea>
+    </div>
+    <div class="form-group">
+        <label>期限:</label>
+        <input type="datetime-local" name="due_date">
     </div>
     <div class="form-group">
         <label>ステータス:</label>
@@ -26,6 +34,10 @@
     <div class="form-group">
         <label>タグ:</label>
         <input type="text" name="tag">
+    </div>
+    <div class="form-group">
+        <label>リンク:</label>
+        <input type="url" name="link">
     </div>
     <button type="submit" class="submit-btn">作成する</button>
 </form>
