@@ -15,7 +15,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Todo一覧表示
+# todo一覧表示
 @app.get("/")
 async def read_root(request: Request):
     db = next(get_db())
@@ -34,7 +34,7 @@ async def show_todo_form(request: Request):
         name="todo_create.html"
     )
 
-# Todo詳細表示
+# todo詳細表示
 @app.get("/todo/{todo_id}")
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
     todo_data = crud.get_todo_by_id(db, todo_id)
@@ -44,13 +44,13 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
         context={"todo": todo_data}
     )
 
-# Todo作成処理
+# todo作成処理
 @app.post("/todo") 
 async def post_todo_create(
     title: str = Form(...),
     description: str = Form(...),
-    status: str = Form("false"),  # HTMLのselectから送られるのは文字列なのでstrで受ける
-    tag: str = Form(""),          # デフォルト値を空文字にする
+    status: str = Form("false"),  
+    tag: str = Form(""),    
     link: str = Form(None),
     memo: str = Form(None),
     db: Session = Depends(get_db),
@@ -66,10 +66,7 @@ async def post_todo_create(
         link=link,
         memo=memo
     )
-
-    created_todo = crud.create_todo(db, todo_create)
     
-    # 成功したら一覧画面へリダイレクトさせるのが一般的です
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/", status_code=303)
 
