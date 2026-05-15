@@ -75,15 +75,6 @@ async def post_todo_create(
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/api/todo", status_code=303)
 
-# todo削除画面表示
-@app.get("/api/todo/{todo_id}")
-async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo_data = crud.get_todo_by_id(db, todo_id)
-    return templates.TemplateResponse(
-        request=request,
-        name="todo_detail.html",
-        context={"todo": todo_data}
-    )
 
 # todo削除処理
 @app.delete("/api/todo/{todo_id}")
