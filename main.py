@@ -7,7 +7,7 @@ from app.models import Todo
 from app.schemas import TodoCreate
 from app import crud
 from app import schemas
-from fastapi import RedirectResponse
+from fastapi.responses import RedirectResponse
 from fastapi import HTTPException
 
 # 起動時にテーブル作成
@@ -73,17 +73,25 @@ async def post_todo_create(
     )
     
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/api/todo", status_code=303)
 
+# todo削除画面表示
+@app.get("/api/todo/{todo_id}")
+async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
+    todo_data = crud.get_todo_by_id(db, todo_id)
+    return templates.TemplateResponse(
+        request=request,
+        name="todo_detail.html",
+        context={"todo": todo_data}
+    )
+
+# todo削除処理
 @app.delete("/api/todo/{todo_id}")
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_todo(db, todo_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Todo not found")
-    
-    # 削除が終わったら一覧画面（"/"）にリダイレクト
-    return RedirectResponse(url="/", status_code=303)
+    crud.delete_todo(db, todo_id)
+    return RedirectResponse(url="/api/todo", status_code=303)
 
+# タグ一覧表示
 @app.get("/api/tag")
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
     tag_list = [
@@ -104,6 +112,8 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
         context={"tag_list": tag_list}
     )
 
+
+# タグ詳細表示
 @app.get("/api/tag/{tag_id}")
 async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
