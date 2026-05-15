@@ -7,6 +7,8 @@ from app.models import Todo
 from app.schemas import TodoCreate
 from app import crud
 from app import schemas
+from fastapi.responses import RedirectResponse
+from fastapi import HTTPException
 
 # 起動時にテーブル作成
 Base.metadata.create_all(bind=engine, checkfirst=True)
@@ -71,9 +73,16 @@ async def post_todo_create(
     )
     
     from fastapi.responses import RedirectResponse
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url="/api/todo", status_code=303)
 
 
+# todo削除処理
+@app.delete("/api/todo/{todo_id}")
+async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+    crud.delete_todo(db, todo_id)
+    return RedirectResponse(url="/api/todo", status_code=303)
+
+# タグ一覧表示
 @app.get("/api/tag")
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
     tag_list = [
@@ -94,6 +103,8 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
         context={"tag_list": tag_list}
     )
 
+
+# タグ詳細表示
 @app.get("/api/tag/{tag_id}")
 async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
