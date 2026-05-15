@@ -29,10 +29,10 @@
         <tbody>
         {% for tag in tag_list %}
             <tr>
-                <td>{{ tag.id }}</td>
                 <td>
-                    <a href="/tag/{{ tag.title }}">{{ tag.title }}</a>
+                    <a href="/api/tag/{{ tag.id }}">{{ tag.id }}</a>
                 </td>
+                <td>{{ tag.title }}</td>
                 <td>{{ tag.created_at }}</td>
             </tr>
             {% else %}
