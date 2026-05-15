@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', path='/todo_list.css') }}">
 </head>
 <body>
+    <h1>Todo一覧</h1>
     <div class="fix">
         <form method="get">
             <input type="text" name="keyword" placeholder="キーワードを入力" required>
@@ -14,9 +15,7 @@
         </form>
 
         <a href="/api/todo" class="btn-create">作成</a>
-
-        <a href=" /api/todo/{todo_id}" class="btn-delete">削除</a>
-    </div>
+        </div>
 
     <p>全{total_count}件/{current_count}件</p>
 
@@ -28,7 +27,7 @@
                 <th>期限日</th>
                 <th>ステータス</th>
                 <th>タグ</th>
-            </tr>
+                <th>操作</th> </tr>
         </thead>
 
         <tbody>
@@ -41,6 +40,12 @@
                 <td>{{ todo.due_date }}</td>
                 <td>{{ todo.status }}</td>
                 <td>{{ todo.tag }}</td>
+                <td>
+                    <form action="/api/todo/{{ todo.id }}/delete" method="post">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
+                    </form>
+                </td>
             </tr>
             {% else %}
             <tr>

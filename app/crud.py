@@ -76,3 +76,15 @@ def create_todo_with_tags(db: Session, todo_data: schemas.TodoCreate, tag_ids: l
 
 def get_todo_by_title(db: Session, todo_title: str):
     return db.query(Todo).filter(Todo.title == todo_title).first()
+
+# todo削除
+def delete_todo(db: Session, todo_id: int):
+    # 1. 削除対象のデータを取得
+    db_todo = db.query(Todo).filter(Todo.id == todo_id).first()
+    
+    # 2. データが存在すれば削除してコミット
+    if db_todo:
+        db.delete(db_todo)
+        db.commit()
+        return True
+    return False
