@@ -1,19 +1,21 @@
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Request, Depends, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from app.database import engine, Base, get_db
-from app.models import Todo, Tag, TodoTag
-from app.schemas import TodoCreate, TodoUpdate
+from app.models import Todo
+from app.schemas import TodoCreate
 from app import crud
+from app import schemas
 
-# アプリ起動時にPostgreSQLにテーブルを作成する
-Base.metadata.create_all(bind=engine,checkfirst=True)
+# 起動時にテーブル作成
+Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# todo一覧表示
 @app.get("/")
 async def read_root(request: Request):
     db = next(get_db())
@@ -24,25 +26,50 @@ async def read_root(request: Request):
         context={"todo_list": todo_list}
     )
 
-@app.get("/todo")
-async def get_todo_list(request: Request):
-    db = next(get_db())
-    todo_list = db.query(Todo).all()
+# todo作成フォーム表示用
+@app.get("/todo/create")
+async def show_todo_form(request: Request):
     return templates.TemplateResponse(
-        request=request,         
-        name="todo_list.html",  
-        context={"todo_list": todo_list}    
+        request=request,
+        name="todo_create.html"
     )
 
-@app.get("/todo/{todo_title}")
-async def get_todo_detail(request: Request, todo_title: str, db: Session = Depends(get_db)):
-        todo_data = crud.get_todo_by_title(db, todo_title)
+# todo詳細表示
+@app.get("/todo/{todo_id}")
+async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
+    todo_data = crud.get_todo_by_id(db, todo_id)
+    return templates.TemplateResponse(
+        request=request,
+        name="todo_detail.html",
+        context={"todo": todo_data}
+    )
 
-        return templates.TemplateResponse(
-            request=request,
-            name="todo_detail.html",
-            context={"todo": todo_data}
-        )
+# todo作成処理
+@app.post("/todo") 
+async def post_todo_create(
+    title: str = Form(...),
+    description: str = Form(...),
+    status: str = Form("false"),  
+    tag: str = Form(""),    
+    link: str = Form(None),
+    memo: str = Form(None),
+    db: Session = Depends(get_db),
+):
+
+    is_completed = True if status.lower() == "true" else False
+
+    todo_create = TodoCreate(
+        title=title,
+        description=description,
+        status=is_completed,
+        tag=tag,
+        link=link,
+        memo=memo
+    )
+    
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/", status_code=303)
+
 
 @app.get("/tag")
 async def get_tag_list(request: Request):
