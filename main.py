@@ -97,7 +97,8 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
 @app.get("/api/tag/{tag_id}")
 async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
-        "title": "sannpo",
+        "id": tag_id,
+        "title": "sample tag",
         "created_at": "2025-12-15",
         "description": "これはサンプルの詳細説明です。",
         "usage": "これはサンプルの使用方法です。"
