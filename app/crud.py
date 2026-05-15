@@ -2,11 +2,11 @@ from sqlalchemy.orm import Session
 from app.models import Todo, Tag, TodoTag
 from app.schemas import TodoCreate, TodoUpdate
 from app import schemas
+from datetime import datetime
 
 def create_todo(db: Session, todo: TodoCreate):
     db_todo = Todo(
         title=todo.title,
-        created_at=todo.created_at,
         description=todo.description,
         due_date=todo.due_date,
         status=todo.status,
