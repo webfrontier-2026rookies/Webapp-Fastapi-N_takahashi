@@ -16,10 +16,13 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Todo一覧表示
-@app.get("/")
-async def read_root(request: Request):
+@app.get("/api/todo")
+async def read_root(request: Request, skip: int = 0, limit: int = 100, completed: bool = None):
     db = next(get_db())
-    todo_list = db.query(Todo).all()
+    todo_list = db.query(Todo)
+    if completed is not None:
+        todo_list = todo_list.filter(Todo.status == completed)
+    todo_list = todo_list.offset(skip).limit(limit).all()
     return templates.TemplateResponse(
         request=request,
         name="todo_list.html",
@@ -27,7 +30,7 @@ async def read_root(request: Request):
     )
 
 # todo作成フォーム表示用
-@app.get("/todo/create")
+@app.get("/api/todo")
 async def show_todo_form(request: Request):
     return templates.TemplateResponse(
         request=request,
@@ -35,7 +38,7 @@ async def show_todo_form(request: Request):
     )
 
 # Todo詳細表示
-@app.get("/todo/{todo_id}")
+@app.get("/api/todo/{todo_id}")
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
     todo_data = crud.get_todo_by_id(db, todo_id)
     return templates.TemplateResponse(
@@ -74,8 +77,8 @@ async def post_todo_create(
     return RedirectResponse(url="/", status_code=303)
 
 
-@app.get("/tag")
-async def get_tag_list(request: Request):
+@app.get("/api/tag")
+async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
     tag_list = [
         {
             "id": 1,
@@ -94,10 +97,11 @@ async def get_tag_list(request: Request):
         context={"tag_list": tag_list}
     )
 
-@app.get("/tag/{tag_title}")
-async def get_tag_detail(request: Request, tag_title: str):
+@app.get("/api/tag/{tag_id}")
+async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
-        "title": tag_title,
+        "id": tag_id,
+        "title": "sample tag",
         "created_at": "2025-12-15",
         "description": "これはサンプルの詳細説明です。",
         "usage": "これはサンプルの使用方法です。"
