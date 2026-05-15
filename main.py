@@ -30,7 +30,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 100, completed
     )
 
 # todo作成フォーム表示用
-@app.get("/api/todo/create")
+@app.get("/api/todo")
 async def show_todo_form(request: Request):
     return templates.TemplateResponse(
         request=request,
@@ -48,7 +48,7 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
     )
 
 # todo作成処理
-@app.post("/api/todo") 
+@app.post("/todo") 
 async def post_todo_create(
     title: str = Form(...),
     description: str = Form(...),
@@ -75,7 +75,7 @@ async def post_todo_create(
 
 
 @app.get("/api/tag")
-async def get_tag_list(request: Request):
+async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
     tag_list = [
         {
             "id": 1,
@@ -94,10 +94,10 @@ async def get_tag_list(request: Request):
         context={"tag_list": tag_list}
     )
 
-@app.get("/api/tag/{tag_title}")
-async def get_tag_detail(request: Request, tag_title: str):
+@app.get("/api/tag/{tag_id}")
+async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
-        "title": tag_title,
+        "title": "sannpo",
         "created_at": "2025-12-15",
         "description": "これはサンプルの詳細説明です。",
         "usage": "これはサンプルの使用方法です。"
