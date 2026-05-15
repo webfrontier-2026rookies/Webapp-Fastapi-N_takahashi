@@ -16,7 +16,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # todo一覧表示
-@app.get("/")
+@app.get("/api/todo")
 async def read_root(request: Request):
     db = next(get_db())
     todo_list = db.query(Todo).all()
@@ -35,7 +35,7 @@ async def show_todo_form(request: Request):
     )
 
 # todo詳細表示
-@app.get("/todo/{todo_id}")
+@app.get("/api/todo/{todo_id}")
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
     todo_data = crud.get_todo_by_id(db, todo_id)
     return templates.TemplateResponse(
