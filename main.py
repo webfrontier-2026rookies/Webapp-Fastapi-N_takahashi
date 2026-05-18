@@ -33,7 +33,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
 
     if q:
         query = query.filter(
-            (models.Todo.title.contains(q)) | (models.Todo.description.contains(q))
+            (models.Todo.title.icontains(q)) | (models.Todo.description.icontains(q))
         )
 
     total_count = query.count()
@@ -117,7 +117,7 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
     query = db.query(models.Tag)
     if q:
         query = query.filter(
-            (models.Tag.title.contains(q)) | (models.Tag.description.contains(q))
+            (models.Tag.title.icontains(q)) | (models.Tag.description.icontains(q))
         )
 
     total_count = query.count()
