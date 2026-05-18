@@ -40,13 +40,13 @@
                 <td>{{ tag.created_at }}</td>
                 <td>
                     <div style="display: flex; width: 300px;">
-                    <form action="/api/tag/{{ tag.id }}" method="post">
-                        <input type="hidden" name="_method" value="DELETE">
-                        <button type="submit">削除</button>
-                    </form>
-                    <form action="/api/tag/{{ tag.id }}" method="get">
+                    <form action="/api/tag/{{ tag.id }}/delete" method="post">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
+                        </form>
+                        <form action="/api/tag/{{ tag.id }}" method="get">
                             <button>詳細</button>
-                    </form>
+                        </form>
                     </div>
                 </td>
             </tr>

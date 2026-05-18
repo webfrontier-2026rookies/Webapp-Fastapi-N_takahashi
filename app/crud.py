@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models import Todo, Tag, TodoTag
-from app.schemas import TodoCreate, TodoUpdate
+from app.schemas import TodoCreate, TodoUpdate, TagCreate, TagUpdate
 from app import schemas
 from datetime import datetime
 from app import models
@@ -45,7 +45,7 @@ def delete_todo(db: Session, todo_id: int):
         db.commit()
     return db_todo
 
-def create_tag(db: Session, tag: str):
+def create_tag(db: Session, tag: TagCreate):
     db_tag = Tag(
         title=tag.title,
         created_at=tag.created_at,
@@ -89,3 +89,60 @@ def delete_todo(db: Session, todo_id: int):
         db.commit()
         return True
     return False
+
+# tag作成
+def create_tag(db: Session, tag: TagCreate):
+    db_tag = models.Tag(
+        title=tag.title,
+        created_at=tag.created_at,
+        description=tag.description,
+        usage=tag.usage
+    )
+    db.add(db_tag)
+    db.commit()
+    db.refresh(db_tag)
+    return db_tag
+
+def get_tag(db: Session, tag_id: int):
+    return db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+def update_tag(db: Session, tag_id: int, tag_data: TagUpdate):
+    db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+    if db_tag:
+        db_tag.title = tag_data.title
+        db_tag.created_at = tag_data.created_at
+        db_tag.description = tag_data.description
+        db_tag.usage = tag_data.usage
+        db.commit()
+        db.refresh(db_tag)
+    return db_tag
+
+def delete_tag(db: Session, tag_id: int):
+    db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+    if db_tag:
+        db.delete(db_tag)
+        db.commit()
+    return db_tag
+
+
+def create_todo_with_tags(db: Session, todo_data: schemas.TodoCreate, tag_ids: list[int]):
+    # 1. Todo 本体を作成
+    db_todo = Todo(
+        title=todo_data.title, 
+        description=todo_data.description
+    )
+    db.add(db_todo)
+    db.flush()
+
+    #中間テーブルにデータを追加
+    for tag_id in tag_ids:
+        db_todo_tag = TodoTag(todo_id=db_todo.id, tag_id=tag_id)
+        db.add(db_todo_tag)
+    
+    db.commit()
+    db.refresh(db_todo)
+    return db_todo
+
+def get_tag_by_title(db: Session, tag_title: str):
+    return db.query(models.Tag).filter(models.Tag.title == tag_title).first()
+
