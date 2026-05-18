@@ -111,20 +111,38 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     crud.delete_todo(db, todo_id)
     return RedirectResponse(url="/api/todo", status_code=303)
 
-# 6. タグ一覧表示
+# 6. tag一覧表示
 @app.get("/api/tag", response_class=HTMLResponse)
-async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
-    tag_list = [
-        {"id": 1, "title": "散歩", "created_at": "2025-12-15"},
-        {"id": 2, "title": "買い物", "created_at": "2025-12-16"}
-    ]
+async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
+    query = db.query(models.Tag)
+
+    if q:
+        query = query.filter(
+            (models.Tag.title.contains(q)) | (models.Tag.description.contains(q))
+        )
+
+    total_count = query.count()
+        
+    tag_list = query.offset(skip).limit(limit).all()
+    
+    total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
+    current_page = (skip // limit) + 1
+    
     return templates.TemplateResponse(
-        request=request,         
-        name="tag_list.html",  
-        context={"tag_list": tag_list}
+        request=request,
+        name="tag_list.html",
+        context={
+            "tag_list": tag_list,
+            "current_limit": limit,
+            "current_skip": skip,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "search_query": q or ""
+        }
     )
 
-# 7. タグ詳細表示
+# 7. tag詳細表示
 @app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
 async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
