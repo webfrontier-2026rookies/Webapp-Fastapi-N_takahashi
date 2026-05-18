@@ -32,6 +32,7 @@
             </tr>
         </thead>
         <tbody>
+        {% if tag_list %}
         {% for tag in tag_list %}
             <tr>
                 <td>
@@ -40,24 +41,46 @@
                 <td>{{ tag.title }}</td>
                 <td>{{ tag.created_at }}</td>
                 <td>
-                    <div style="display: flex; width: 300px;">
-                    <form action="/api/tag/{{ tag.id }}/delete" method="post">
-                            <input type="hidden" name="_method" value="DELETE">
-                            <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
-                        </form>
-                        <form action="/api/tag/{{ tag.id }}" method="get">
-                            <button>詳細</button>
-                        </form>
-                    </div>
+                    <form action="/api/tag/{{ tag.id }}" method="get" style="margin: 0;">
+                        <button type="submit">詳細</button>
+                    </form>
+                    <button type="button" onclick="deleteTag('{{ tag.id }}')">
+                            削除
+                    </button>
                 </td>
             </tr>
-            {% else %}
-            <tr>
-                <td colspan="3">タグが見つかりません。</td>
-            </tr>
         {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="4" style="text-align: center; color: #999;">登録されているタグがありません。</td>
+        </tr>
+        {% endif %}
         </tbody>
     </table>
+
+    <script>
+        async function deleteTag(tagId) {
+        if (!confirm('本当に削除しますか？')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/tag/${tagId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                // 削除が成功したら、画面をリロードして最新にする
+                window.location.reload();
+            } else {
+                alert('削除に失敗しました。');
+            }
+        } catch (error) {
+            console.error('エラーが発生しました:', error);
+            alert('通信エラーが発生しました。');
+        }
+        }
+    </script>
 
     <div>
         {% if current_skip > 0 %}

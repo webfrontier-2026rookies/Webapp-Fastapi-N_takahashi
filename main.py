@@ -91,7 +91,7 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
 
     total_count = query.count()
         
-    tag_list = query.offset(skip).limit(limit).all()
+    tag_list = crud.get_tag_list(db, skip=skip, limit=limit)
     
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
     current_page = (skip // limit) + 1
@@ -113,15 +113,18 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
 # tag詳細表示
 @app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
 async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
-    tag_data = crud.get_tag(db, tag_id)
+    
+    # ★ 1件取得用の「get_tag_by_id」を呼び出す
+    tag_data = crud.get_tag_by_id(db, tag_id)
+    
     if tag_data is None:
         raise HTTPException(status_code=404, detail="Tag not found")
+        
     return templates.TemplateResponse(
         request=request,
         name="tag_detail.html",
         context={"tag": tag_data}
     )
-
 # tag作成フォーム表示用
 @app.get("/tag/create", response_class=HTMLResponse)
 async def show_tag_form(request: Request):
@@ -181,4 +184,11 @@ async def post_tag_create(
     )
     crud.create_tag(db=db, tag=tag_in)
     return RedirectResponse(url="/api/tag", status_code=303)
+
+# tag削除処理
+@app.delete("/api/tag/{tag_id}")  
+async def delete_tag(tag_id: int, db: Session = Depends(get_db)):
+    crud.delete_tag(db, tag_id)
+    return {"status": "success", "message": "Deleted successfully"}
+
 
