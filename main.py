@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import engine, Base, SessionLocal
-from app.schemas import TodoCreate
+from app.schemas import TodoCreate, TodoUpdate, TagCreate
 from app import crud, models
 from datetime import datetime
 
@@ -115,7 +115,6 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
 @app.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
     query = db.query(models.Tag)
-
     if q:
         query = query.filter(
             (models.Tag.title.contains(q)) | (models.Tag.description.contains(q))
@@ -144,16 +143,39 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
 
 # 7. tag詳細表示
 @app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
-async def get_tag_detail(request: Request, tag_id: int):
-    tag_data = {
-        "id": tag_id,
-        "title": "sample tag",
-        "created_at": "2025-12-15",
-        "description": "これはサンプルの詳細説明です。",
-        "usage": "これはサンプルの使用方法です。"
-    }
+async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
+    tag_data = crud.get_tag(db, tag_id)
+    if tag_data is None:
+        raise HTTPException(status_code=404, detail="Tag not found")
     return templates.TemplateResponse(
         request=request,
         name="tag_detail.html",
         context={"tag": tag_data}
     )
+
+# 8. tag作成フォーム表示用
+@app.get("/tag/create", response_class=HTMLResponse)
+async def show_tag_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="tag_create.html"
+    )
+
+# tag作成処理
+@app.post("/api/tag") 
+async def post_tag_create(
+    title: str = Form(...),
+    created_at: datetime = Form(None),
+    description: str = Form(...),
+    usage: str = Form(None),
+    db: Session = Depends(get_db),
+):
+    tag_in = TagCreate(
+        title=title,
+        created_at=created_at,
+        description=description,
+        usage=usage
+    )
+    crud.create_tag(db=db, tag=tag_in)
+    return RedirectResponse(url="/api/tag", status_code=303)
+
