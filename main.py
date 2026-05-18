@@ -9,7 +9,7 @@ from app import crud, models
 from datetime import datetime
 
 # 起動時にテーブル作成
-Base.metadata.create_all(bind=engine, checkfirst=True)
+# Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -23,7 +23,7 @@ def get_db():
     finally:
         db.close()
 
-# 1. todo一覧表示
+# todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
 async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
     query = db.query(models.Todo)
@@ -57,7 +57,22 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
         }
     )
 
-# 2. todo作成フォーム表示用
+# todo詳細表示
+@app.get("/api/todo/{todo_id}", response_class=HTMLResponse)
+async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
+    
+    # ★ 1件取得用の関数「get_todo_by_id」に変更します
+    todo_data = crud.get_todo_by_id(db, todo_id)
+    
+    if todo_data is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return templates.TemplateResponse(
+        request=request,
+        name="todo_detail.html",
+        context={"todo": todo_data}
+    )
+
+# todo作成フォーム表示用
 @app.get("/todo/create", response_class=HTMLResponse)
 async def show_todo_form(request: Request):
     return templates.TemplateResponse(
@@ -65,16 +80,54 @@ async def show_todo_form(request: Request):
         name="todo_create.html"
     )
 
-# 3. todo詳細表示
-@app.get("/api/todo/{todo_id}", response_class=HTMLResponse)
-async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo_data = crud.get_todo(db, todo_id)
-    if todo_data is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
+# tag一覧表示
+@app.get("/api/tag", response_class=HTMLResponse)
+async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
+    query = db.query(models.Tag)
+    if q:
+        query = query.filter(
+            (models.Tag.title.contains(q)) | (models.Tag.description.contains(q))
+        )
+
+    total_count = query.count()
+        
+    tag_list = query.offset(skip).limit(limit).all()
+    
+    total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
+    current_page = (skip // limit) + 1
+    
     return templates.TemplateResponse(
         request=request,
-        name="todo_detail.html",
-        context={"todo": todo_data}
+        name="tag_list.html",
+        context={
+            "tag_list": tag_list,
+            "current_limit": limit,
+            "current_skip": skip,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "current_page": current_page,
+            "search_query": q or ""
+        }
+    )
+
+# tag詳細表示
+@app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
+async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
+    tag_data = crud.get_tag(db, tag_id)
+    if tag_data is None:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    return templates.TemplateResponse(
+        request=request,
+        name="tag_detail.html",
+        context={"tag": tag_data}
+    )
+
+# tag作成フォーム表示用
+@app.get("/tag/create", response_class=HTMLResponse)
+async def show_tag_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="tag_create.html"
     )
 
 # todo作成処理
@@ -105,61 +158,11 @@ async def post_todo_create(
     
     return RedirectResponse(url="/api/todo", status_code=303)
 
-# 5. todo削除処理
-@app.post("/api/todo/{todo_id}")  
+# todo削除処理
+@app.delete("/api/todo/{todo_id}")  
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     crud.delete_todo(db, todo_id)
-    return RedirectResponse(url="/api/todo", status_code=303)
-
-# 6. tag一覧表示
-@app.get("/api/tag", response_class=HTMLResponse)
-async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
-    query = db.query(models.Tag)
-    if q:
-        query = query.filter(
-            (models.Tag.title.contains(q)) | (models.Tag.description.contains(q))
-        )
-
-    total_count = query.count()
-        
-    tag_list = query.offset(skip).limit(limit).all()
-    
-    total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
-    current_page = (skip // limit) + 1
-    
-    return templates.TemplateResponse(
-        request=request,
-        name="tag_list.html",
-        context={
-            "tag_list": tag_list,
-            "current_limit": limit,
-            "current_skip": skip,
-            "total_count": total_count,
-            "total_pages": total_pages,
-            "current_page": current_page,
-            "search_query": q or ""
-        }
-    )
-
-# 7. tag詳細表示
-@app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
-async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
-    tag_data = crud.get_tag(db, tag_id)
-    if tag_data is None:
-        raise HTTPException(status_code=404, detail="Tag not found")
-    return templates.TemplateResponse(
-        request=request,
-        name="tag_detail.html",
-        context={"tag": tag_data}
-    )
-
-# 8. tag作成フォーム表示用
-@app.get("/tag/create", response_class=HTMLResponse)
-async def show_tag_form(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="tag_create.html"
-    )
+    return {"status": "success", "message": "Deleted successfully"}
 
 # tag作成処理
 @app.post("/api/tag") 
