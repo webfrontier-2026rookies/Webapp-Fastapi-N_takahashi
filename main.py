@@ -8,7 +8,7 @@ from app.schemas import TodoCreate
 from app import crud, models
 from datetime import datetime
 
-# 起動時にテーブル作成（Alembicを使っているなら、最悪なくてもOKですが残しておきます）
+# 起動時にテーブル作成
 Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI()
