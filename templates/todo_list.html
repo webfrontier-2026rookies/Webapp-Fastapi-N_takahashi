@@ -17,8 +17,7 @@
         <a href="/todo/create" class="btn-create">作成</a>
         </div>
 
-    <p>全{total_count}件/{current_count}件</p>
-
+    <p>全 {{ total_pages }} ページ中 / {{ current_page }} ページ目 (全 {{ total_count }} 件)</p>
     <table border="1">
         <thead>
             <tr>
@@ -59,7 +58,15 @@
         </tbody>
     </table>
 
-    <button class="button-prev">戻る</button>
-    <button class="button-next">進む</button>
+    <div>
+        {% if current_skip > 0 %}
+            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}" class="button-prev">戻る</a>
+        {% endif %}
+
+        {% if current_page < total_pages %}
+            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}" class="button-next">進む</a>
+        {% endif %}
+    </div>
 </body>
 </html>
+
