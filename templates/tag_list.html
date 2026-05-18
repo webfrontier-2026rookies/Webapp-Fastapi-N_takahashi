@@ -9,15 +9,18 @@
 <body>
     <h1>タグ一覧</h1>
     <div class="fix">
-        <form method="get">
-            <input type="text" name="keyword" placeholder="キーワードを入力" required>
+        <form method="get" action="/api/tag">
+            <input type="text" name="q" placeholder="キーワードを入力" value="{{ search_query }}">
             <button type="submit">検索</button>
+            {% if search_query %}
+            <a href="/api/tag" class="btn-clear">検索クリア</a>
+            {% endif %}
         </form>
 
-        <button class="create">作成</button>
+        <a href="/tag/create" class="btn-create">作成</a>
     </div>
 
-    <p>全{total_count}件/{current_count}件</p>
+    <p>全 {{ total_count }} 件中 / {{ current_page }} ページ目</p>
 
     <table border="1">
         <thead>
@@ -25,6 +28,7 @@
                 <th>ID</th>
                 <th>タイトル</th>
                 <th>作成日時</th>
+                <th>操作</th> </tr>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +39,17 @@
                 </td>
                 <td>{{ tag.title }}</td>
                 <td>{{ tag.created_at }}</td>
+                <td>
+                    <div style="display: flex; width: 300px;">
+                    <form action="/api/tag/{{ tag.id }}/delete" method="post">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
+                        </form>
+                        <form action="/api/tag/{{ tag.id }}" method="get">
+                            <button>詳細</button>
+                        </form>
+                    </div>
+                </td>
             </tr>
             {% else %}
             <tr>
@@ -44,7 +59,14 @@
         </tbody>
     </table>
 
-    <button class="button-prev">戻る</button>
-    <button class="button-next">進む</button>
+    <div>
+        {% if current_skip > 0 %}
+            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}&q={{ search_query }}" class="button-prev">戻る</a>
+        {% endif %}
+
+        {% if current_page < total_pages %}
+            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}&q={{ search_query }}" class="button-next">進む</a>
+        {% endif %}
+    </div>
 </body>
 </html>
