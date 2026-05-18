@@ -87,8 +87,7 @@ def delete_todo(db: Session, todo_id: int):
     if db_todo:
         db.delete(db_todo)
         db.commit()
-        return True
-    return False
+    return db_todo
 
 # tag作成
 def create_tag(db: Session, tag: TagCreate):
@@ -145,4 +144,7 @@ def create_todo_with_tags(db: Session, todo_data: schemas.TodoCreate, tag_ids: l
 
 def get_tag_by_title(db: Session, tag_title: str):
     return db.query(models.Tag).filter(models.Tag.title == tag_title).first()
+
+def get_todo_by_id(db: Session, todo_id: int):
+    return db.query(models.Todo).filter(models.Todo.id == todo_id).first()
 
