@@ -4,9 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import engine, Base, SessionLocal
-from app.models import Todo
 from app.schemas import TodoCreate
-from app import crud, models, schemas
+from app import crud, models
 from datetime import datetime
 
 # 起動時にテーブル作成（Alembicを使っているなら、最悪なくてもOKですが残しておきます）
