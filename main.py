@@ -25,18 +25,30 @@ def get_db():
 
 # 1. todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
-async def read_root(request: Request, skip: int = 0, limit: int = 100, completed: bool = None, db: Session = Depends(get_db)):
+async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db)):
     query = db.query(models.Todo)
     
     if completed is not None:
         query = query.filter(models.Todo.status == completed)
+
+    total_count = query.count()
         
     todo_list = query.offset(skip).limit(limit).all()
+    
+    total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
+    current_page = (skip // limit) + 1
     
     return templates.TemplateResponse(
         request=request,
         name="todo_list.html",
-        context={"todo_list": todo_list}
+        context={
+            "todo_list": todo_list,
+            "current_limit": limit,
+            "current_skip": skip,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "current_page": current_page,
+        }
     )
 
 # 2. todo作成フォーム表示用
@@ -50,7 +62,7 @@ async def show_todo_form(request: Request):
 # 3. todo詳細表示
 @app.get("/api/todo/{todo_id}", response_class=HTMLResponse)
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo_data = crud.get_todo_by_id(db, todo_id)
+    todo_data = crud.get_todo(db, todo_id)
     if todo_data is None:
         raise HTTPException(status_code=404, detail="Todo not found")
     return templates.TemplateResponse(
