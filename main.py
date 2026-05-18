@@ -25,11 +25,16 @@ def get_db():
 
 # 1. todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
-async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db)):
+async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
     query = db.query(models.Todo)
     
     if completed is not None:
         query = query.filter(models.Todo.status == completed)
+
+    if q:
+        query = query.filter(
+            (models.Todo.title.contains(q)) | (models.Todo.description.contains(q))
+        )
 
     total_count = query.count()
         
@@ -48,6 +53,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
             "total_count": total_count,
             "total_pages": total_pages,
             "current_page": current_page,
+            "search_query": q or ""
         }
     )
 
