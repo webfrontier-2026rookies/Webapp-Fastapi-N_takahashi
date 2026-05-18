@@ -3,9 +3,10 @@ from app.models import Todo, Tag, TodoTag
 from app.schemas import TodoCreate, TodoUpdate
 from app import schemas
 from datetime import datetime
+from app import models
 
 def create_todo(db: Session, todo: TodoCreate):
-    db_todo = Todo(
+    db_todo = models.Todo(
         title=todo.title,
         description=todo.description,
         due_date=todo.due_date,
@@ -20,10 +21,10 @@ def create_todo(db: Session, todo: TodoCreate):
     return db_todo
 
 def get_todo(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Todo).offset(skip).limit(limit).all()
+    return db.query(models.Todo).offset(skip).limit(limit).all()
 
 def update_todo(db: Session, todo_id: int, todo_data: TodoUpdate):
-    db_todo = db.query(Todo).filter(Todo.id == todo_id).first()
+    db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if db_todo:
         db_todo.title = todo_data.title
         db_todo.created_at = todo_data.created_at

@@ -14,7 +14,7 @@
             <button type="submit">検索</button>
         </form>
 
-        <a href="/api/todo" class="btn-create">作成</a>
+        <a href="/todo/create" class="btn-create">作成</a>
         </div>
 
     <p>全{total_count}件/{current_count}件</p>
@@ -38,7 +38,11 @@
                 </td>
                 <td>{{ todo.title }}</td>
                 <td>{{ todo.due_date }}</td>
-                <td>{{ todo.status }}</td>
+                {% if todo.status %}
+                <td><span>完了</span></td>
+                {% else %}
+                <td><span>未完了</span></td>
+                {% endif %}
                 <td>{{ todo.tag }}</td>
                 <td>
                     <form action="/api/todo/{{ todo.id }}/delete" method="post">
