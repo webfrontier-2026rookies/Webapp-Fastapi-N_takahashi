@@ -1,48 +1,59 @@
-from fastapi import FastAPI, Request, Depends, Form
+from fastapi import FastAPI, Request, Depends, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
-from app.database import engine, Base, get_db
+from app.database import engine, Base, SessionLocal
 from app.models import Todo
 from app.schemas import TodoCreate
-from app import crud
-from app import schemas
-from fastapi.responses import RedirectResponse
-from fastapi import HTTPException
+from app import crud, models, schemas
+from datetime import datetime
 
-# 起動時にテーブル作成
+# 起動時にテーブル作成（Alembicを使っているなら、最悪なくてもOKですが残しておきます）
 Base.metadata.create_all(bind=engine, checkfirst=True)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# todo一覧表示
-@app.get("/api/todo")
-async def read_root(request: Request, skip: int = 0, limit: int = 100, completed: bool = None):
-    db = next(get_db())
-    todo_list = db.query(Todo)
+# データベースセッションの依存関係（一元化）
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# 1. todo一覧表示
+@app.get("/api/todo", response_class=HTMLResponse)
+async def read_root(request: Request, skip: int = 0, limit: int = 100, completed: bool = None, db: Session = Depends(get_db)):
+    query = db.query(models.Todo)
+    
     if completed is not None:
-        todo_list = todo_list.filter(Todo.status == completed)
-    todo_list = todo_list.offset(skip).limit(limit).all()
+        query = query.filter(models.Todo.status == completed)
+        
+    todo_list = query.offset(skip).limit(limit).all()
+    
     return templates.TemplateResponse(
         request=request,
         name="todo_list.html",
         context={"todo_list": todo_list}
     )
 
-# todo作成フォーム表示用
-@app.get("/api/todo")
+# 2. todo作成フォーム表示用
+@app.get("/todo/create", response_class=HTMLResponse)
 async def show_todo_form(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="todo_create.html"
     )
 
-# todo詳細表示
-@app.get("/api/todo/{todo_id}")
+# 3. todo詳細表示
+@app.get("/api/todo/{todo_id}", response_class=HTMLResponse)
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
     todo_data = crud.get_todo_by_id(db, todo_id)
+    if todo_data is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
     return templates.TemplateResponse(
         request=request,
         name="todo_detail.html",
@@ -50,9 +61,10 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
     )
 
 # todo作成処理
-@app.post("/todo") 
+@app.post("/api/todo") 
 async def post_todo_create(
     title: str = Form(...),
+    due_date: datetime =  Form(...), 
     description: str = Form(...),
     status: str = Form("false"),  
     tag: str = Form(""),    
@@ -60,42 +72,34 @@ async def post_todo_create(
     memo: str = Form(None),
     db: Session = Depends(get_db),
 ):
-
-    is_completed = True if status.lower() == "true" else False
-
-    todo_create = TodoCreate(
+    is_completed = True if status == "完了" else False
+    
+    todo_in = TodoCreate(
         title=title,
         description=description,
         status=is_completed,
         tag=tag,
         link=link,
-        memo=memo
+        memo=memo,
+        due_date=due_date 
     )
     
-    from fastapi.responses import RedirectResponse
+    crud.create_todo(db=db, todo=todo_in)
+    
     return RedirectResponse(url="/api/todo", status_code=303)
 
-
-# todo削除処理
-@app.delete("/api/todo/{todo_id}")
+# 5. todo削除処理
+@app.post("/api/todo/{todo_id}")  # ★HTMLの<form>から送るために POST に変更するか、元のままで。今回はPOSTに合わせるのが一般的です
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     crud.delete_todo(db, todo_id)
     return RedirectResponse(url="/api/todo", status_code=303)
 
-# タグ一覧表示
-@app.get("/api/tag")
+# 6. タグ一覧表示
+@app.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
     tag_list = [
-        {
-            "id": 1,
-            "title": "散歩",
-            "created_at": "2025-12-15"
-        },
-        {
-            "id": 2,
-            "title": "買い物",
-            "created_at": "2025-12-16"
-        }
+        {"id": 1, "title": "散歩", "created_at": "2025-12-15"},
+        {"id": 2, "title": "買い物", "created_at": "2025-12-16"}
     ]
     return templates.TemplateResponse(
         request=request,         
@@ -103,9 +107,8 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 100):
         context={"tag_list": tag_list}
     )
 
-
-# タグ詳細表示
-@app.get("/api/tag/{tag_id}")
+# 7. タグ詳細表示
+@app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
 async def get_tag_detail(request: Request, tag_id: int):
     tag_data = {
         "id": tag_id,
@@ -114,7 +117,6 @@ async def get_tag_detail(request: Request, tag_id: int):
         "description": "これはサンプルの詳細説明です。",
         "usage": "これはサンプルの使用方法です。"
     }
-
     return templates.TemplateResponse(
         request=request,
         name="tag_detail.html",

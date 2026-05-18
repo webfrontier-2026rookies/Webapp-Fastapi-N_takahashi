@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
+from datetime import datetime
 
 # データの受け取り用スキーマ
 class TodoBase(BaseModel):
@@ -8,8 +9,8 @@ class TodoBase(BaseModel):
     
 
 class TodoCreate(TodoBase):
-    created_at: Optional[str] = None
-    due_date: Optional[str] = None
+    created_at: Optional[datetime] = None
+    due_date: Optional[datetime] = None
     status: Optional[bool] = False
     tag: Optional[str] = None
     link: Optional[str] = None
@@ -18,8 +19,8 @@ class TodoCreate(TodoBase):
 # DBから取得したデータの返し用スキーマ
 class Todo(TodoBase):
     id: int
-    created_at: Optional[str] = None
-    due_date: Optional[str] = None
+    created_at: Optional[datetime] = None
+    due_date: Optional[datetime] = None
     status: Optional[bool] = False
     tag: Optional[str] = None
     link: Optional[str] = None
@@ -32,8 +33,8 @@ class Todo(TodoBase):
 class TodoUpdate(TodoBase):
     title: Optional[str] = None
     description: Optional[str] = None
-    created_at: Optional[str] = None
-    due_date: Optional[str] = None
+    created_at: Optional[datetime] = None
+    due_date: Optional[datetime] = None
     status: Optional[bool] = None
     tag: Optional[str] = None
     link: Optional[str] = None
