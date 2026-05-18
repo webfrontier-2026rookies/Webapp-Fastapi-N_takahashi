@@ -9,12 +9,17 @@
 <body>
     <h1>Todo一覧</h1>
     <div class="fix">
-        <form method="get">
-            <input type="text" name="keyword" placeholder="キーワードを入力" required>
+        <form method="get" action="/api/todo">
+            <input type="text" name="q" placeholder="キーワードを入力" value="{{ search_query }}">
             <button type="submit">検索</button>
+            {% if search_query %}
+            <a href="/api/todo" class="btn-clear">検索クリア</a>
+            {% endif %}
         </form>
 
         <a href="/todo/create" class="btn-create">作成</a>
+
+        <a href="/templates/tag_list.html" class="btn-tag">タグ管理</a>
         </div>
 
     <p>全 {{ total_pages }} ページ中 / {{ current_page }} ページ目 (全 {{ total_count }} 件)</p>
@@ -44,10 +49,25 @@
                 {% endif %}
                 <td>{{ todo.tag }}</td>
                 <td>
-                    <form action="/api/todo/{{ todo.id }}/delete" method="post">
-                        <input type="hidden" name="_method" value="DELETE">
-                        <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
-                    </form>
+                    <div style="display: flex; width: 300px;">
+                        <form action="/api/todo/{{ todo.id }}" method="post">
+                            <input type="hidden" name="_method" value="PUT">
+                            {% if todo.status %}
+                            <input type="hidden" name="status" value="false">
+                            <button type="submit">未完了にする</button>
+                            {% else %}
+                            <input type="hidden" name="status" value="true">
+                            <button type="submit">完了にする</button>
+                            {% endif %}
+                        </form>
+                        <form action="/api/todo/{{ todo.id }}/delete" method="post">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
+                        </form>
+                        <form action="/api/todo/{{ todo.id }}" method="get">
+                            <button>詳細</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% else %}
@@ -60,11 +80,11 @@
 
     <div>
         {% if current_skip > 0 %}
-            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}" class="button-prev">戻る</a>
+            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}&q={{ search_query }}" class="button-prev">戻る</a>
         {% endif %}
 
         {% if current_page < total_pages %}
-            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}" class="button-next">進む</a>
+            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}&q={{ search_query }}" class="button-next">進む</a>
         {% endif %}
     </div>
 </body>
