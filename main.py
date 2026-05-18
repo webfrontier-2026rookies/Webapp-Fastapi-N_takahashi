@@ -106,7 +106,7 @@ async def post_todo_create(
     return RedirectResponse(url="/api/todo", status_code=303)
 
 # 5. todo削除処理
-@app.post("/api/todo/{todo_id}")  # ★HTMLの<form>から送るために POST に変更するか、元のままで。今回はPOSTに合わせるのが一般的です
+@app.post("/api/todo/{todo_id}")  
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     crud.delete_todo(db, todo_id)
     return RedirectResponse(url="/api/todo", status_code=303)
