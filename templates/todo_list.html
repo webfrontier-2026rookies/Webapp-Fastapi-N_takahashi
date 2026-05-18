@@ -35,7 +35,7 @@
         </thead>
 
         <tbody>
-            {% if todo_list %}
+        {% if todo_list %}
             {% for todo in todo_list %}
             <tr>
                 <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
@@ -46,8 +46,8 @@
                 </td>
                 <td>{{ todo.tag }}</td>
                 <td>
-                    <div style="width: 300px;">
-                        <form action="/api/todo/{{ todo.id }}" method="post">
+                    <div>
+                        <form action="/api/todo/{{ todo.id }}" method="post" style="margin: 0;">
                             <input type="hidden" name="_method" value="PUT">
                             {% if todo.status %}
                                 <input type="hidden" name="status" value="false">
@@ -57,9 +57,7 @@
                                 <button type="submit">完了にする</button>
                             {% endif %}
                         </form>
-                        <form action="/api/todo/{{ todo.id }}" method="get">
-                            <button>詳細</button>
-                        </form>
+
                         <button type="button" onclick="deleteTodo('{{ todo.id }}')">
                             削除
                         </button>
@@ -67,12 +65,12 @@
                 </td>
             </tr>
             {% endfor %}
-            {% else %}
-            <tr>
-                <td colspan="6" style="text-align: center; color: #999;">該当するTodoが見つかりません。</td>
-            </tr>
-            {% endif %}
-        </tbody>
+        {% else %}
+        <tr>
+            <td colspan="6" style="text-align: center; color: #999;">該当するTodoが見つかりません。</td>
+        </tr>
+    {% endif %}
+</tbody>
     </table>
 
     <script>
@@ -97,7 +95,7 @@
             alert('通信エラーが発生しました。');
         }
         }
-</script>
+    </script>
 
     <div>
         {% if current_skip > 0 %}
