@@ -165,7 +165,7 @@ async def post_todo_create(
 @app.delete("/api/todo/{todo_id}")  
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     crud.delete_todo(db, todo_id)
-    return RedirectResponse(url="/api/todo", status_code=303)
+    return {"status": "success", "message": "Todo deleted successfully"}
 
 # 6. tag一覧表示
 @app.get("/api/tag", response_class=HTMLResponse)

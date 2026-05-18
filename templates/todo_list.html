@@ -47,7 +47,7 @@
                 <td>{{ todo.tag }}</td>
                 <td>
                     <div>
-                        <form action="/api/todo/{{ todo.id }}" method="post" style="margin: 0;">
+                        <form action="/api/todo/{{ todo.id }}" method="post">
                             <input type="hidden" name="_method" value="PUT">
                             {% if todo.status %}
                                 <input type="hidden" name="status" value="false">
@@ -59,7 +59,7 @@
                         </form>
 
                         <button type="button" onclick="deleteTodo('{{ todo.id }}')">
-                            削除
+                        削除
                         </button>
                     </div>
                 </td>
@@ -74,27 +74,24 @@
     </table>
 
     <script>
-        async function deleteTodo(todoId) {
-        if (!confirm('本当に削除しますか？')) {
-            return;
-        }
+    async function deleteTodo(todoId) {
+    if (!confirm('本当にこのTodoを削除しますか？')) return;
 
-        try {
-            const response = await fetch(`/api/todo/${todoId}`, {
-                method: 'DELETE'
-            });
+    try {
+        const response = await fetch(`/api/todo/${todoId}`, {
+            method: 'DELETE'
+        });
 
-            if (response.ok) {
-                // 削除が成功したら、画面をリロードして最新にする
-                window.location.reload();
-            } else {
-                alert('削除に失敗しました。');
-            }
-        } catch (error) {
-            console.error('エラーが発生しました:', error);
-            alert('通信エラーが発生しました。');
+        if (response.ok) {
+            // Python側から {"status": "success"} が返ってきたら画面を更新
+            window.location.reload();
+        } else {
+            alert('Todoの削除に失敗しました。');
         }
-        }
+    } catch (error) {
+        alert('通信エラーが発生しました。');
+    }
+    }
     </script>
 
     <div>
