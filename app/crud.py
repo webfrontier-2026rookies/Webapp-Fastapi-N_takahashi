@@ -148,3 +148,8 @@ def get_tag_by_title(db: Session, tag_title: str):
 def get_todo_by_id(db: Session, todo_id: int):
     return db.query(models.Todo).filter(models.Todo.id == todo_id).first()
 
+def get_tag_by_id(db: Session, tag_id: int):
+    return db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+def get_tag_list(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Tag).offset(skip).limit(limit).all()
