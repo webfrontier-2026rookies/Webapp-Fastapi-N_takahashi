@@ -7,7 +7,6 @@ class TodoBase(BaseModel):
     title: str
     description: str
     
-
 class TodoCreate(TodoBase):
     created_at: Optional[datetime] = None
     due_date: Optional[datetime] = None
@@ -39,3 +38,43 @@ class TodoUpdate(TodoBase):
     tag: Optional[str] = None
     link: Optional[str] = None
     memo: Optional[str] = None
+
+# タグのスキーマ
+class TagBase(BaseModel):
+    title: str
+    description: str
+
+class TagCreate(TagBase):
+    title: Optional[str] = None
+    created_at: Optional[datetime] = None
+    description: Optional[str] = None
+    usage: Optional[str] = None
+
+class TagUpdate(TagBase):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    created_at: Optional[datetime] = None
+    usage: Optional[str] = None
+
+# DBから取得したデータの返し用スキーマ
+class Tag(TagBase):
+    id: int
+    title: Optional[str] = None
+    description: Optional[str] = None
+    created_at: Optional[datetime] = None
+    usage: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+    link: Optional[str] = None
+    memo: Optional[str] = None
+
+    # SQLAlchemyのモデルをPydanticで使うための設定
+    model_config = ConfigDict(from_attributes=True)
+
+# 更新用スキーマ
+class TagUpdate(TagBase):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    created_at: Optional[datetime] = None
+    usage: Optional[str] = None
