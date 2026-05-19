@@ -161,6 +161,22 @@ async def post_todo_create(
     
     return RedirectResponse(url="/api/todo", status_code=303)
 
+# todoステータス変更処理
+@app.post("/api/todo/{todo_id}/toggle")
+async def toggle_todo_status(
+    todo_id: int,
+    status: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if not db_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    db_todo.status = True if status == "完了" else False
+    db.commit()
+    return RedirectResponse(url="/api/todo", status_code=303)
+
+
 # todo削除処理
 @app.delete("/api/todo/{todo_id}")  
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
