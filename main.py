@@ -181,7 +181,7 @@ async def toggle_todo_status(
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    db_todo.status = True if status == "完了" else False
+    db_todo.status = (status == "true")
     db.commit()
     return RedirectResponse(url="/api/todo", status_code=303)
 

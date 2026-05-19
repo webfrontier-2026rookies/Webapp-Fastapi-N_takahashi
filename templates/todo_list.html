@@ -83,12 +83,15 @@
                         <td><span style="color: #4CAF50;">完了</span></td>
                         <td>{{ todo.tag }}</td>
                         <td>
-                            <div style="display: flex; gap: 10px; align-items: center;">
+                            <div>
                                 <form action="/api/todo/{{ todo.id }}/toggle" method="post" style="margin: 0;">
-                                    <input type="hidden" name="status" value="false"> <button type="submit" style="background-color: #666; color: white;">未完了に戻す</button>
+                                    <input type="hidden" name="status" value="false"> <button type="submit" style="background-color: #666; color: white;">戻す</button>
                                 </form>
 
-                                <button type="button" onclick="deleteTodo('{{ todo.id }}')">削除</button>
+                                <button type="button" style="background-color: red; color: white;" onclick="deleteTodo('{{ todo.id }}')">削除</button>
+                                <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
+                                    <button type="submit">詳細</button>
+                                </form>
                             </div>
                         </td>
                     </tr>
