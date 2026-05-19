@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
-from app.database import engine, Base, SessionLocal
+from app.database import SessionLocal
 from app.schemas import TodoCreate,  TagCreate
 from app import crud, models
 from datetime import datetime
