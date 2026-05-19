@@ -36,7 +36,33 @@
 
         <tbody>
             <tr>
-                <td colspan="6" style="background-color: #f9f9f9; font-weight: bold; padding: 10px;">📝 未完了のタスク</td>
+                <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
+                <td>{{ todo.title }}</td>
+                <td>{{ todo.due_date }}</td>
+                <td>
+                    {% if todo.status %}<span>完了</span>{% else %}<span>未完了</span>{% endif %}
+                </td>
+                <td>{{ todo.tag }}</td>
+                <td>
+                    <div>
+                        <form action="/api/todo/{{ todo.id }}/toggle" method="post">
+                            <input type="hidden" name="_method" value="PUT">
+                            {% if todo.status %}
+                                <input type="hidden" name="status" value="false">
+                                <button type="submit">未完了にする</button>
+                            {% else %}
+                                <input type="hidden" name="status" value="true">
+                                <button type="submit">完了にする</button>
+                            {% endif %}
+                        </form>
+                        <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
+                            <button type="submit">詳細</button>
+                        </form>
+                        <button type="button" onclick="deleteTodo('{{ todo.id }}')">
+                        削除
+                        </button>
+                    </div>
+                </td>
             </tr>
     
             {% if active_todos %}
