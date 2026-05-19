@@ -10,7 +10,7 @@
     <h1>タグ一覧</h1>
     <div class="fix">
         <form method="get" onsubmit="event.preventDefault(); window.location.href='/api/tag?q=' + encodeURIComponent(this.q.value);">
-            <input type="text" name="q" placeholder="キーワードを入力" value="{{ search_query }}">
+            <input type="text" name="q" placeholder="キーワードを入力" value="{{ search_param }}">
             <button type="submit">検索</button>
             {% if search_param %}
             <a href="/api/tag" class="btn-clear">検索クリア</a>
@@ -84,11 +84,11 @@
 
     <div>
         {% if current_skip > 0 %}
-            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}&q={{ search_query }}" class="button-prev">戻る</a>
+            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}&q={{ search_param }}" class="button-prev">戻る</a>
         {% endif %}
 
         {% if current_page < total_pages %}
-            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}&q={{ search_query }}" class="button-next">進む</a>
+            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}&q={{ search_param }}" class="button-next">進む</a>
         {% endif %}
     </div>
 </body>
