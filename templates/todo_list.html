@@ -47,7 +47,7 @@
                 <td>{{ todo.tag }}</td>
                 <td>
                     <div>
-                        <form action="/api/todo/{{ todo.id }}" method="post">
+                        <form action="/api/todo/{{ todo.id }}/toggle" method="post">
                             <input type="hidden" name="_method" value="PUT">
                             {% if todo.status %}
                                 <input type="hidden" name="status" value="false">
