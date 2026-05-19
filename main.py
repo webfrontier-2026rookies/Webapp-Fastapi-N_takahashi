@@ -30,15 +30,19 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
 
     #キーワードの検索
     if q:
+        search_param = f"%{q}%"
         query = query.filter(
-            (models.Todo.title.icontains(q)) | (models.Todo.description.icontains(q))
+            (models.Todo.title.ilike(search_param)) | (models.Todo.description.ilike(search_param))
         )
+    
+    #作成日時の昇順で並び替え
+    query = query.order_by(models.Todo.created_at.asc())
 
     #未完了の表
-    active_todos = db.query(models.Todo).filter(models.Todo.status == False).all()
+    active_todos = query.filter(models.Todo.status == False).all()
 
     #完了済みの表
-    completed_todos = db.query(models.Todo).filter(models.Todo.status == True).all()
+    completed_todos = query.filter(models.Todo.status == True).all()
 
     total_count = query.count()
         
@@ -57,7 +61,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
             "total_count": total_count,
             "total_pages": total_pages,
             "current_page": current_page,
-            "search_query": q or "",
+            "search_param": q or "",
             "active_todos": active_todos,
             "completed_todos": completed_todos,
         }
@@ -88,11 +92,16 @@ async def show_todo_form(request: Request):
 @app.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
     query = db.query(models.Tag)
+
+    #キーワード検索
     if q:
         search_param = f"%{q}%"
         query = query.filter(
             (models.Tag.title.ilike(search_param)) | (models.Tag.description.ilike(search_param))
         )
+    
+    #作成日時の昇順で並び替え
+    query = query.order_by(models.Tag.created_at.asc())
 
     total_count = query.count()
 
@@ -212,4 +221,54 @@ async def delete_tag(tag_id: int, db: Session = Depends(get_db)):
     crud.delete_tag(db, tag_id)
     return {"status": "success", "message": "Deleted successfully"}
 
+#todo更新処理
+@app.put("/api/todo/{todo_id}")
+async def update_todo(
+    todo_id: int,
+    title: str = Form(...),
+    due_date: datetime = Form(...),
+    description: str = Form(...),
+    status: str = Form("false"),
+    tag: str = Form(""),
+    link: str = Form(None),
+    memo: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    is_completed = True if status == "完了" else False
+    
+    todo_in = TodoCreate(
+        title=title,
+        description=description,
+        status=is_completed,
+        tag=tag,
+        link=link,
+        memo=memo,
+        due_date=due_date
+    )
+    
+    crud.update_todo(db=db, todo_id=todo_id, todo=todo_in)
+    
+    return RedirectResponse(url="/api/todo", status_code=303
+)
 
+#tag更新処理
+@app.put("/api/tag/{tag_id}")
+async def update_tag(
+    tag_id: int,
+    title: str = Form(...),
+    created_at: datetime = Form(None),
+    description: str = Form(...),
+    usage: str = Form(None),
+    db: Session = Depends(get_db)
+):
+    tag_in = TagCreate(
+        title=title,
+        created_at=created_at,
+        description=description,
+        usage=usage
+    )
+    
+    crud.update_tag(db=db, tag_id=tag_id, tag=tag_in)
+    
+    return RedirectResponse(url="/api/tag", status_code=303
+)
