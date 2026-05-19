@@ -31,10 +31,17 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
     if completed is not None:
         query = query.filter(models.Todo.status == completed)
 
+    #キーワードの検索
     if q:
         query = query.filter(
             (models.Todo.title.icontains(q)) | (models.Todo.description.icontains(q))
         )
+
+    #未完了の表
+    active_todos = db.query(models.Todo).filter(models.Todo.status == False).all()
+
+    #完了済みの表
+    completed_todos = db.query(models.Todo).filter(models.Todo.status == True).all()
 
     total_count = query.count()
         
@@ -53,7 +60,9 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
             "total_count": total_count,
             "total_pages": total_pages,
             "current_page": current_page,
-            "search_query": q or ""
+            "search_query": q or "",
+            "active_todos": active_todos,
+            "completed_todos": completed_todos,
         }
     )
 
