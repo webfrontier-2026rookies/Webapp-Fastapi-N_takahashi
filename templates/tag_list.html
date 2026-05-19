@@ -9,10 +9,10 @@
 <body>
     <h1>タグ一覧</h1>
     <div class="fix">
-        <form method="get" action="/api/tag">
+        <form method="get" onsubmit="event.preventDefault(); window.location.href='/api/tag?q=' + encodeURIComponent(this.q.value);">
             <input type="text" name="q" placeholder="キーワードを入力" value="{{ search_query }}">
             <button type="submit">検索</button>
-            {% if search_query %}
+            {% if search_param %}
             <a href="/api/tag" class="btn-clear">検索クリア</a>
             {% endif %}
         </form>
@@ -20,7 +20,7 @@
         <a href="/tag/create" class="btn-create">作成</a>
     </div>
 
-    <p>全 {{ total_count }} 件中 / {{ current_page }} ページ目</p>
+    <p>全 {{ total_pages }} ページ中 / {{ current_page }} ページ目 (全 {{ total_count }} 件)</p>
 
     <table border="1">
         <thead>
@@ -44,7 +44,7 @@
                     <form action="/api/tag/{{ tag.id }}" method="get" style="margin: 0;">
                         <button type="submit">詳細</button>
                     </form>
-                    <button type="button" onclick="deleteTag('{{ tag.id }}')">
+                    <button type="button"  style="background-color: red; color: white;" onclick="deleteTag('{{ tag.id }}')">
                             削除
                     </button>
                 </td>
