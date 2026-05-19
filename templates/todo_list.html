@@ -66,13 +66,70 @@
                     </div>
                 </td>
             </tr>
-            {% endfor %}
-        {% else %}
-        <tr>
-            <td colspan="6" style="text-align: center; color: #999;">該当するTodoが見つかりません。</td>
-        </tr>
-    {% endif %}
-</tbody>
+    
+            {% if active_todos %}
+                {% for todo in active_todos %}
+                    <tr>
+                        <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
+                        <td>{{ todo.title }}</td>
+                        <td>{{ todo.due_date }}</td>
+                        <td><span style="color: #ff9800;">未完了</span></td>
+                        <td>{{ todo.tag }}</td>
+                        <td>
+                            <div>
+                                <form action="/api/todo/{{ todo.id }}/toggle" method="post" style="margin: 0;">
+                                    <input type="hidden" name="status" value="true"> <button type="submit" style="background-color: #4CAF50; color: white;">完了にする</button>
+                                </form>
+
+                                <button type="button" style="background-color: red;" onclick="deleteTodo('{{ todo.id }}')">削除</button>
+
+                                <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
+                                    <button type="submit">詳細</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999; padding: 15px;">未完了のタスクはありません！🎉</td>
+                </tr>
+            {% endif %}
+
+            <tr style="height: 20px;"><td colspan="6" style="border: none;"></td></tr>
+
+            <tr>
+                <td colspan="6" style="background-color: #f1f1f1; font-weight: bold; padding: 10px;">✅ 完了済みのタスク</td>
+            </tr>
+
+            {% if completed_todos %}
+                {% for todo in completed_todos %}
+                    <tr style="background-color: #fafafa; color: #777;">
+                        <td><del>{{ todo.id }}</del></td>
+                        <td><del>{{ todo.title }}</del></td>
+                        <td><del>{{ todo.due_date }}</del></td>
+                        <td><span style="color: #4CAF50;">完了</span></td>
+                        <td>{{ todo.tag }}</td>
+                        <td>
+                            <div>
+                                <form action="/api/todo/{{ todo.id }}/toggle" method="post" style="margin: 0;">
+                                    <input type="hidden" name="status" value="false"> <button type="submit" style="background-color: #666; color: white;">戻す</button>
+                                </form>
+
+                                <button type="button" style="background-color: red; color: white;" onclick="deleteTodo('{{ todo.id }}')">削除</button>
+                                <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
+                                    <button type="submit">詳細</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999; padding: 15px;">完了したタスクはまだありません。</td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 
     <script>
