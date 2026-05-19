@@ -35,8 +35,6 @@
         </thead>
 
         <tbody>
-        {% if todo_list %}
-            {% for todo in todo_list %}
             <tr>
                 <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
                 <td>{{ todo.title }}</td>
