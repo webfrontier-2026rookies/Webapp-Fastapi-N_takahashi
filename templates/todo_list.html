@@ -57,7 +57,9 @@
                                 <button type="submit">完了にする</button>
                             {% endif %}
                         </form>
-
+                        <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
+                            <button type="submit">詳細</button>
+                        </form>
                         <button type="button" onclick="deleteTodo('{{ todo.id }}')">
                         削除
                         </button>
