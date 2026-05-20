@@ -9,6 +9,8 @@ from app import crud, models
 from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
+from sqlalchemy.exc import OperationalError
+from sqlalchemy import text
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,9 +23,15 @@ templates = Jinja2Templates(directory="templates")
 def get_db():
     db = SessionLocal()
     try:
+        db.execute(text("SELECT 1"))
         yield db
+    #データベースの接続エラー時のエラーハンドリング
+    except OperationalError as e:
+        logger.error(f"【データベース接続失敗】DBサーバーに接続できませんでした。エラー詳細: {e}")
+        raise HTTPException(status_code=500, detail="データベース接続エラー")
     finally:
         db.close()
+    
 
 # todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
@@ -77,8 +85,10 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
     todo_data = crud.get_todo_by_id(db, todo_id)
     
+    #todoデータが存在しない場合のエラーハンドリング
     if todo_data is None:
-        raise HTTPException(status_code=404, detail="Todo not found")
+        logger.error(f"【Todoデータエラー】ID {todo_id} のTodoデータが見つかりませんでした。")
+        raise HTTPException(status_code=404, detail="Todoデータは存在しません")
     return templates.TemplateResponse(
         request=request,
         name="todo_detail.html",
@@ -134,8 +144,10 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
 async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
     tag_data = crud.get_tag_by_id(db, tag_id)
     
+    #tagデータが存在しない場合のエラーハンドリング
     if tag_data is None:
-        raise HTTPException(status_code=404, detail="Tag not found")
+        logger.error(f"【Tagデータエラー】ID {tag_id} のTagデータが見つかりませんでした。")
+        raise HTTPException(status_code=404, detail="Tagデータは存在しません")
         
     return templates.TemplateResponse(
         request=request,
