@@ -1,136 +1,210 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>todo一覧</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/todo_list.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='/todo_list.css') }}"
+    />
+  </head>
+  <body>
     <h1>Todo一覧</h1>
     <div class="fix">
-        <form method="get" action="/api/todo">
-            <input type="text" name="q" placeholder="キーワードを入力" value="{{ search_param }}">
-            <button type="submit">検索</button>
-            {% if search_param %}
-            <a href="/api/todo" class="btn-clear">検索クリア</a>
-            {% endif %}
-        </form>
+      <form method="get" action="/api/todo">
+        <input
+          type="text"
+          name="q"
+          placeholder="キーワードを入力"
+          value="{{ search_param }}"
+        />
+        <button type="submit">検索</button>
+        {% if search_param %}
+        <a href="/api/todo" class="btn-clear">検索クリア</a>
+        {% endif %}
+      </form>
 
-        <a href="/todo/create" class="btn-create">作成</a>
+      <a href="/todo/create" class="btn-create">作成</a>
 
-        <a href="/api/tag" class="btn-tag">タグ管理</a>
-        </div>
+      <a href="/api/tag" class="btn-tag">タグ管理</a>
+    </div>
 
-    <p>全 {{ total_pages }} ページ中 / {{ current_page }} ページ目 (全 {{ total_count }} 件)</p>
+    <p>
+      全 {{ total_pages }} ページ中 / {{ current_page }} ページ目 (全 {{
+      total_count }} 件)
+    </p>
     <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>タイトル</th>
-                <th>期限日</th>
-                <th>ステータス</th>
-                <th>タグ</th>
-                <th>操作</th> </tr>
-        </thead>
-
-        <tbody>
-    <tr>
-        <td colspan="6" style="background-color: #f1f1f1; font-weight: bold; padding: 10px;">📝 未完了のタスク</td>
-    </tr>
-    
-    {% if active_todos %}
-        {% for todo in active_todos %}
-            <tr>
-                <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
-                <td>{{ todo.title }}</td>
-                <td>{{ todo.due_date }}</td>
-                <td><span style="color: #ff9800;">未完了</span></td>
-                <td>{{ todo.tag }}</td>
-                <td>
-                    <div>
-                        <form action="/api/todo/{{ todo.id }}/toggle" method="post" style="margin: 0;">
-                            <input type="hidden" name="status" value="true">
-                            <button type="submit" style="background-color: #4CAF50; color: white;">完了にする</button>
-                        </form>
-                        <button type="button" style="background-color: red; color: white;" onclick="deleteTodo('{{ todo.id }}')">削除</button>
-                        <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
-                        <button type="submit">詳細</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-        {% endfor %}
-    {% else %}
+      <thead>
         <tr>
-            <td colspan="6" style="text-align: center; color: #999; padding: 15px;">未完了のタスクはありません！🎉</td>
+          <th>ID</th>
+          <th>タイトル</th>
+          <th>期限日</th>
+          <th>ステータス</th>
+          <th>タグ</th>
+          <th>操作</th>
         </tr>
-    {% endif %}
+      </thead>
 
-    <tr style="height: 20px;"><td colspan="6" style="border: none;"></td></tr>
-
-    <tr>
-        <td colspan="6" style="background-color: #f1f1f1; font-weight: bold; padding: 10px;">✅ 完了済みのタスク</td>
-    </tr>
-
-    {% if completed_todos %}
-        {% for todo in completed_todos %}
-            <tr style="background-color: #fafafa; color: #777;">
-                <td><del>{{ todo.id }}</del></td>
-                <td><del>{{ todo.title }}</del></td>
-                <td><del>{{ todo.due_date }}</del></td>
-                <td><span style="color: #4CAF50;">完了</span></td>
-                <td>{{ todo.tag }}</td>
-                <td>
-                    <div>
-                        <form action="/api/todo/{{ todo.id }}/toggle" method="post" style="margin: 0;">
-                            <input type="hidden" name="status" value="false">
-                            <button type="submit" style="background-color: #666; color: white;">戻す</button>
-                        </form>
-                        <button type="button" style="background-color: red; color: white;" onclick="deleteTodo('{{ todo.id }}')">削除</button>
-                        <form action="/api/todo/{{ todo.id }}" method="get" style="margin: 0;">
-                        <button type="submit">詳細</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-        {% endfor %}
-    {% else %}
+      <tbody>
         <tr>
-            <td colspan="6" style="text-align: center; color: #999; padding: 15px;">完了したタスクはまだありません。</td>
+          <td
+            colspan="6"
+            style="background-color: #f1f1f1; font-weight: bold; padding: 10px"
+          >
+            📝 未完了のタスク
+          </td>
         </tr>
-    {% endif %}
-</tbody>
+
+        {% if active_todos %} {% for todo in active_todos %}
+        <tr>
+          <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
+          <td>{{ todo.title }}</td>
+          <td>{{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}</td>
+          <td><span style="color: #ff9800">未完了</span></td>
+          <td>{{ todo.tag }}</td>
+          <td>
+            <div>
+              <form
+                action="/api/todo/{{ todo.id }}/toggle"
+                method="post"
+                style="margin: 0"
+              >
+                <input type="hidden" name="status" value="true" />
+                <button
+                  type="submit"
+                  style="background-color: #4caf50; color: white"
+                >
+                  完了にする
+                </button>
+              </form>
+              <button
+                type="button"
+                style="background-color: red; color: white"
+                onclick="deleteTodo('{{ todo.id }}')"
+              >
+                削除
+              </button>
+              <form
+                action="/api/todo/{{ todo.id }}"
+                method="get"
+                style="margin: 0"
+              >
+                <button type="submit">詳細</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %} {% else %}
+        <tr>
+          <td
+            colspan="6"
+            style="text-align: center; color: #999; padding: 15px"
+          >
+            未完了のタスクはありません！🎉
+          </td>
+        </tr>
+        {% endif %}
+
+        <tr style="height: 20px">
+          <td colspan="6" style="border: none"></td>
+        </tr>
+
+        <tr>
+          <td
+            colspan="6"
+            style="background-color: #f1f1f1; font-weight: bold; padding: 10px"
+          >
+            ✅ 完了済みのタスク
+          </td>
+        </tr>
+
+        {% if completed_todos %} {% for todo in completed_todos %}
+        <tr style="background-color: #fafafa; color: #777">
+          <td><del>{{ todo.id }}</del></td>
+          <td><del>{{ todo.title }}</del></td>
+          <td><del>{{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}</del></td>
+          <td><span style="color: #4caf50">完了</span></td>
+          <td>{{ todo.tag }}</td>
+          <td>
+            <div>
+              <form
+                action="/api/todo/{{ todo.id }}/toggle"
+                method="post"
+                style="margin: 0"
+              >
+                <input type="hidden" name="status" value="false" />
+                <button
+                  type="submit"
+                  style="background-color: #666; color: white"
+                >
+                  戻す
+                </button>
+              </form>
+              <button
+                type="button"
+                style="background-color: red; color: white"
+                onclick="deleteTodo('{{ todo.id }}')"
+              >
+                削除
+              </button>
+              <form
+                action="/api/todo/{{ todo.id }}"
+                method="get"
+                style="margin: 0"
+              >
+                <button type="submit">詳細</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %} {% else %}
+        <tr>
+          <td
+            colspan="6"
+            style="text-align: center; color: #999; padding: 15px"
+          >
+            完了したタスクはまだありません。
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
     </table>
 
     <script>
-    async function deleteTodo(todoId) {
-    if (!confirm('本当にこのTodoを削除しますか？')) return;
+      async function deleteTodo(todoId) {
+        if (!confirm("本当にこのTodoを削除しますか？")) return;
 
-    try {
-        const response = await fetch(`/api/todo/${todoId}`, {
-            method: 'DELETE'
-        });
+        try {
+          const response = await fetch(`/api/todo/${todoId}`, {
+            method: "DELETE",
+          });
 
-        if (response.ok) {
+          if (response.ok) {
             window.location.reload();
-        } else {
-            alert('Todoの削除に失敗しました。');
+          } else {
+            alert("Todoの削除に失敗しました。");
+          }
+        } catch (error) {
+          alert("通信エラーが発生しました。");
         }
-    } catch (error) {
-        alert('通信エラーが発生しました。');
-    }
-    }
+      }
     </script>
 
     <div>
-        {% if current_skip > 0 %}
-            <a href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}&q={{ search_param }}" class="button-prev">戻る</a>
-        {% endif %}
-
-        {% if current_page < total_pages %}
-            <a href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}&q={{ search_param }}" class="button-next">進む</a>
-        {% endif %}
+      {% if current_skip > 0 %}
+      <a
+        href="?skip={{ current_skip - current_limit }}&limit={{ current_limit }}&q={{ search_param }}"
+        class="button-prev"
+        >戻る</a
+      >
+      {% endif %} {% if current_page < total_pages %}
+      <a
+        href="?skip={{ current_skip + current_limit }}&limit={{ current_limit }}&q={{ search_param }}"
+        class="button-next"
+        >進む</a
+      >
+      {% endif %}
     </div>
-</body>
+  </body>
 </html>

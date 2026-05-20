@@ -10,18 +10,19 @@
     />
   </head>
   <body>
+    <h1>Todo詳細</h1>
     <div class="detail-grid">
       <div class="label">タイトル</div>
       <div class="value">{{ todo.title }}</div>
 
       <div class="label">作成日時</div>
-      <div class="value">{{ todo.created_at }}</div>
+      <div class="value">{{ todo.created_at.strftime('%Y/%m/%d %H:%M') }}</div>
 
       <div class="label">詳細</div>
       <div class="value">{{ todo.description }}</div>
 
       <div class="label">期限</div>
-      <div class="value">{{ todo.due_date }}</div>
+      <div class="value">{{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}</div>
 
       <div class="label">ステータス</div>
       <div class="value">
