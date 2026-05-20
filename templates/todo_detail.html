@@ -24,7 +24,13 @@
       <div class="value">{{ todo.due_date }}</div>
 
       <div class="label">ステータス</div>
-      <div class="value">{{ todo.status }}</div>
+      <div class="value">
+        {% if todo.status %}
+        <span>完了</span>
+        {% else %}
+        <span>未完了</span>
+        {% endif %}
+      </div>
 
       <div class="label">タグ</div>
       <div class="value">{{ todo.tag }}</div>

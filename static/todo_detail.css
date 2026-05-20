@@ -1,38 +1,37 @@
 body {
-    text-align: center;
+  text-align: center;
 }
 
 .detail-grid {
-    display: grid;
-    grid-template-columns: 120px 1fr; /* 左列を120px、右列を残り全部に設定 */
-    gap: 15px; /* 項目間のすきま */
-    max-width: 500px;
-    text-align: center;
-    margin: 0 auto;
-    margin-top: 100px;
+  display: grid;
+  grid-template-columns: 120px 1fr; /* 左列を120px、右列を残り全部に設定 */
+  gap: 15px; /* 項目間のすきま */
+  max-width: 500px;
+  text-align: center;
+  margin: 0 auto;
+  margin-top: 100px;
 }
 
 .label {
-    font-weight: bold;
-    color: #555;
+  font-weight: bold;
+  color: #555;
 }
 
 .value {
-    color: #333;
+  color: #333;
 }
 
 button {
-    text-align: center;
-    background-color: blue;
-    color: white;
-    width: 80px;
-    border-radius: 5px; 
-    height: 25px;
-    border: none;
-    margin-top: 20px;
+  text-align: center;
+  background-color: blue;
+  color: white;
+  width: 80px;
+  border-radius: 5px;
+  height: 25px;
+  border: none;
+  margin-top: 20px;
 }
 
 button:hover {
-    background-color: rgb(71, 71, 218);
+  background-color: rgb(71, 71, 218);
 }
-
