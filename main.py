@@ -8,6 +8,7 @@ from app.schemas import TodoCreate,  TagCreate
 from app import crud, models
 from datetime import datetime
 import logging
+from pydantic import HttpUrl, ValidationError
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -168,6 +169,14 @@ async def post_todo_create(
         logger.error("入力されていない項目があります。") 
 
         raise HTTPException(status_code=400, detail="必須項目が入力されていません")
+    
+    #URLがhttp;//またはhttps://で始まる形式でないときのエラー文
+    if link:
+        try:
+            HttpUrl(link)
+        except ValidationError:
+            logger.error(f"【URL形式エラー】不正なURL形式です: {link}")
+            raise HTTPException(status_code=400, detail="URL形式が不正です")
     
     is_completed = True if status == "完了" else False
     
