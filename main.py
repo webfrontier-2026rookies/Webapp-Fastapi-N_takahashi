@@ -9,6 +9,8 @@ from app import crud, models
 from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
+from sqlalchemy.exc import OperationalError
+from sqlalchemy import text
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,9 +23,14 @@ templates = Jinja2Templates(directory="templates")
 def get_db():
     db = SessionLocal()
     try:
+        db.execute(text("SELECT 1"))
         yield db
+    except OperationalError as e:
+        logger.error(f"【データベース接続失敗】DBサーバーに接続できませんでした。エラー詳細: {e}")
+        raise HTTPException(status_code=500, detail="データベース接続エラー")
     finally:
         db.close()
+    
 
 # todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
