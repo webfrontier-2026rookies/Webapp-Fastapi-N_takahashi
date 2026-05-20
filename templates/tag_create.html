@@ -1,36 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tag作成</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/tag_create.css') }}">
-</head>
-<body>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='/tag_create.css') }}"
+    />
+  </head>
+  <body>
     <h1>新しいタグを作成</h1>
 
     <form action="/api/tag" method="post" class="create-form">
-        <div class="form-group">
+      <div class="form-group">
         <label for="title">タイトル:</label>
-        <input type="text" name="title" required>
-        </div>
-        <div class="form-group">
+        <input type="text" name="title" required />
+      </div>
+      <div class="form-group">
         <label for="created_at">作成日時:</label>
-        <input type="datetime-local" name="created_at">
-        </div>
+        <input type="datetime-local" name="created_at" required />
+      </div>
 
-        <div class="form-group">
-            <label for="description">詳細:</label>
-            <textarea id="description" name="description"></textarea>
-        </div>
+      <div class="form-group">
+        <label for="description">詳細:</label>
+        <textarea id="description" name="description" required></textarea>
+      </div>
 
-        <div class="form-group">
-            <label for="usage">使用方法:</label>
-            <textarea id="usage" name="usage"></textarea>
-        </div>
+      <div class="form-group">
+        <label for="usage">使用方法:</label>
+        <textarea id="usage" name="usage"></textarea>
+      </div>
 
-        <button type="submit" class="submit-btn">作成する</button>
+      <button type="submit" class="submit-btn">作成する</button>
     </form>
     <a href="/api/tag">一覧に戻る</a>
-</body>
+  </body>
 </html>
