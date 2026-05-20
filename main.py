@@ -27,7 +27,7 @@ def get_db():
         yield db
     #データベースの接続エラー時のエラーハンドリング
     except OperationalError as e:
-        logger.error(f"【データベース接続失敗】DBサーバーに接続できませんでした。エラー詳細: {e}")
+        logger.fatal(f"【データベース接続失敗】DBサーバーに接続できませんでした。エラー詳細: {e}")
         raise HTTPException(status_code=500, detail="データベース接続エラー")
     finally:
         db.close()
