@@ -187,7 +187,7 @@ async def post_todo_create(
         try:
             HttpUrl(link)
         except ValidationError:
-            logger.error(f"【URL形式エラー】不正なURL形式です: {link}")
+            logger.warning(f"【URL形式エラー】不正なURL形式です: {link}")
             raise HTTPException(status_code=400, detail="URL形式が不正です")
     
     is_completed = True if status == "完了" else False
