@@ -7,6 +7,10 @@ from app.database import SessionLocal
 from app.schemas import TodoCreate,  TagCreate
 from app import crud, models
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -158,6 +162,13 @@ async def post_todo_create(
     memo: str = Form(None),
     db: Session = Depends(get_db),
 ):
+    
+    #必須項目が入力されていないときのエラー文
+    if not title or not description or not due_date or not status or not tag:
+        logger.error("入力されていない項目があります。") 
+
+        raise HTTPException(status_code=400, detail="必須項目が入力されていません")
+    
     is_completed = True if status == "完了" else False
     
     todo_in = TodoCreate(
