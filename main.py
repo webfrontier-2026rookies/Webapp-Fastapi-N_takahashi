@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
-from app.schemas import TodoCreate,  TagCreate
+from app.schemas import TodoCreate,  TagCreate, TodoUpdate, TagUpdate
 from app import crud, models
 from datetime import datetime
 import logging
@@ -296,7 +296,7 @@ async def update_todo(
 ):
     is_completed = True if status == "完了" else False
     
-    todo_in = TodoCreate(
+    todo_in = TodoUpdate(
         title=title,
         description=description,
         status=is_completed,
@@ -307,6 +307,11 @@ async def update_todo(
     )
     
     crud.update_todo(db=db, todo_id=todo_id, todo=todo_in)
+
+    if update_todo is None:
+        logger.error(f"【Todo更新エラー】ID {todo_id} のTodoデータが見つかりませんでした。")
+        raise HTTPException(status_code=404, detail="Todoが見つかりませんでした。")
+    
     return RedirectResponse(url="/api/todo", status_code=303
 )
 
@@ -320,7 +325,7 @@ async def update_tag(
     usage: str = Form(None),
     db: Session = Depends(get_db)
 ):
-    tag_in = TagCreate(
+    tag_in = TagUpdate(
         title=title,
         created_at=created_at,
         description=description,
@@ -328,6 +333,10 @@ async def update_tag(
     )
     logger.info(f"Tagが更新されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
     crud.update_tag(db=db, tag_id=tag_id, tag=tag_in)
+
+    if update_tag is None:
+        logger.error(f"【Tag更新エラー】ID {tag_id} のTagデータが見つかりませんでした。")
+        raise HTTPException(status_code=404, detail="Tagが見つかりませんでした。")
     
     return RedirectResponse(url="/api/tag", status_code=303
 )
