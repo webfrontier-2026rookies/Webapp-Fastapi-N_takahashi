@@ -3,14 +3,12 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
+from app.database import get_db
 from app.schemas import TodoCreate,  TagCreate, TodoUpdate, TagUpdate
 from app import crud, models
 from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
-from sqlalchemy.exc import OperationalError
-from sqlalchemy import text
 from sqlalchemy.orm import joinedload
 from typing import Optional
 
@@ -20,21 +18,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-# データベースセッションの依存関係（一元化）
-def get_db():
-    db = SessionLocal()
-    try:
-        db.execute(text("SELECT 1"))
-        yield db
-    #データベースの接続エラー時のエラーハンドリング
-    except OperationalError as e:
-        logger.fatal(f"【データベース接続失敗】DBサーバーに接続できませんでした。エラー詳細: {e}")
-        raise HTTPException(status_code=500, detail="データベース接続エラー")
-    finally:
-        db.close()
     
-
 # todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
 async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
@@ -62,21 +46,10 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
     query = query.order_by(models.Todo.created_at.asc())
 
     #未完了の表
-    active_todos = (
-        db.query(models.Todo)
-        .options(joinedload(models.Todo.tags))  
-        .filter(models.Todo.status == False)
-        .order_by(models.Todo.created_at.asc())
-        .all()
-    )
+    active_todos = query.filter(models.Todo.status == False).all()
+
     #完了済みの表
-    completed_todos = (
-        db.query(models.Todo)
-        .options(joinedload(models.Todo.tags))
-        .filter(models.Todo.status == True)
-        .order_by(models.Todo.created_at.asc())
-        .all()
-    )
+    completed_todos = query.filter(models.Todo.status == True).all()
 
     total_count = query.count()
         
