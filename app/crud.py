@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models import Todo, Tag, TodoTag
+from app.models import Todo, Tag
 from app.schemas import TodoCreate, TodoUpdate, TagCreate, TagUpdate
 
 def create_todo(db: Session, todo: TodoCreate) -> Todo:
@@ -89,11 +89,13 @@ def delete_tag(db: Session, tag_id: int) -> Tag | None:
 
 def create_todo_with_tags(db: Session, todo_data: TodoCreate, tag_ids: list[int]) -> Todo:
     """Todo 本体と中間テーブル経由のタグ紐付けを同時に作成する"""
-    db_todo = Todo(title=todo_data.title, description=todo_data.description)
+    todo_link = str(todo_data.link) if todo_data.link else None
+    db_todo = Todo(title=todo_data.title, description=todo_data.description, due_date=todo_data.due_date, status=todo_data.status, link=todo_link, memo=todo_data.memo)
     db.add(db_todo)
     db.flush()
-    for tag_id in tag_ids:
-        db.add(TodoTag(todo_id=db_todo.id, tag_id=tag_id))
+    if tag_ids:
+        tags = db.query(Tag).filter(Tag.id.in_(tag_ids)).all()
+        db_todo.tags = tags
     db.commit()
     db.refresh(db_todo)
     return db_todo

@@ -11,6 +11,7 @@ import logging
 from pydantic import HttpUrl, ValidationError
 from sqlalchemy.exc import OperationalError
 from sqlalchemy import text
+from sqlalchemy.orm import joinedload
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,10 +61,21 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
     query = query.order_by(models.Todo.created_at.asc())
 
     #未完了の表
-    active_todos = query.filter(models.Todo.status == False).all()
-
+    active_todos = (
+        db.query(models.Todo)
+        .options(joinedload(models.Todo.tags))  # 👈 ✨これを目印として絶対に追加してください！
+        .filter(models.Todo.status == False)
+        .order_by(models.Todo.created_at.asc())
+        .all()
+    )
     #完了済みの表
-    completed_todos = query.filter(models.Todo.status == True).all()
+    completed_todos = (
+        db.query(models.Todo)
+        .options(joinedload(models.Todo.tags))  # 👈 ✨これを目印として絶対に追加してください！
+        .filter(models.Todo.status == True)
+        .order_by(models.Todo.created_at.asc())
+        .all()
+    )
 
     total_count = query.count()
         
@@ -91,7 +103,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
 # todo詳細表示
 @app.get("/api/todo/{todo_id}", response_class=HTMLResponse)
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo_data = crud.get_todo_by_id(db, todo_id)
+    todo_data = crud.get_todo_by_id(db, todo_id=todo_id)
     
     #todoデータが存在しない場合のエラーハンドリング
     if todo_data is None:
@@ -104,12 +116,13 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
     )
 
 # todo作成フォーム表示用
-@app.get("/todo/create", response_class=HTMLResponse)
-async def show_todo_form(request: Request):
+@app.get("/todo/create")
+async def show_todo_form(request: Request, db: Session = Depends(get_db)):
+    tags = db.query(models.Tag).order_by(models.Tag.title).all()
     return templates.TemplateResponse(
-        request=request,
-        name="todo_create.html"
+        request=request, name="todo_create.html", context={"tags": tags},
     )
+
 
 # tag一覧表示
 @app.get("/api/tag", response_class=HTMLResponse)
@@ -188,15 +201,15 @@ async def post_todo_create(
     title: str = Form(...),
     due_date: datetime =  Form(...), 
     description: str = Form(...),
-    status: str = Form("false"),  
-    tag: str = Form(""),    
+    status: str = Form("false"),     
     link: str = Form(None),
     memo: str = Form(None),
     db: Session = Depends(get_db),
+    tag_ids: list[int] = Form(default=[]),
 ):
     
     #必須項目が入力されていないときのエラー文
-    if not title or not description or not due_date or not status or not tag:
+    if not title or not description or not due_date or not status or not tag_ids:
         logger.error("入力されていない項目があります。") 
 
         raise HTTPException(status_code=400, detail="必須項目が入力されていません")
@@ -215,15 +228,15 @@ async def post_todo_create(
         title=title,
         description=description,
         status=is_completed,
-        tag=tag,
+        tag_ids=tag_ids,
         link=link,
         memo=memo,
         due_date=due_date 
     )
     
     #todo作成の完了のログ
-    logger.info(f"Todoが作成されました。タイトル: {todo_in.title}, 作成日時: {datetime.now()}, 詳細: {todo_in.description}, 期限: {todo_in.due_date}, タグ: {todo_in.tag}, リンク: {todo_in.link}, メモ: {todo_in.memo}")
-    crud.create_todo(db=db, todo=todo_in)
+    logger.info(f"Todoが作成されました。タイトル: {todo_in.title}, 作成日時: {datetime.now()}, 詳細: {todo_in.description}, 期限: {todo_in.due_date}, タグ: {todo_in.tag_ids}, リンク: {todo_in.link}, メモ: {todo_in.memo}")
+    crud.create_todo_with_tags(db=db, todo_data=todo_in, tag_ids=tag_ids)
     return RedirectResponse(url="/api/todo", status_code=303)
 
 # todoステータス変更処理

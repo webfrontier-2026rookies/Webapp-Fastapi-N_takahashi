@@ -11,7 +11,7 @@ class TodoBase(BaseModel):
 class TodoCreate(TodoBase):
     due_date: Optional[datetime] = None
     status: Optional[bool] = False
-    tag: Optional[str] = None
+    tag_ids: list[int] = []
     link: Optional[HttpUrl] = None
     memo: Optional[str] = None
 
@@ -20,7 +20,7 @@ class TodoUpdate(BaseModel):
     description: Optional[str] = None
     due_date: Optional[datetime] = None
     status: Optional[bool] = None
-    tag: Optional[str] = None
+    tag_ids: list[int] = []
     link: Optional[HttpUrl] = None
     memo: Optional[str] = None
 
@@ -30,7 +30,7 @@ class Todo(TodoBase):
     created_at: datetime
     due_date: datetime
     status: bool
-    tag: str
+    tag_ids: list[int] = []
     link: Optional[HttpUrl] = None
     memo: Optional[str] = None
 
