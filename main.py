@@ -12,6 +12,7 @@ from pydantic import HttpUrl, ValidationError
 from sqlalchemy.exc import OperationalError
 from sqlalchemy import text
 from sqlalchemy.orm import joinedload
+from typing import Optional
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -201,7 +202,7 @@ async def post_todo_create(
     title: str = Form(...),
     due_date: datetime =  Form(...), 
     description: str = Form(...),
-    status: str = Form("false"),     
+    status: Optional[str] = Form(None),
     link: str = Form(None),
     memo: str = Form(None),
     db: Session = Depends(get_db),
@@ -209,7 +210,7 @@ async def post_todo_create(
 ):
     
     #必須項目が入力されていないときのエラー文
-    if not title or not description or not due_date or not status or not tag_ids:
+    if not title or not description or not due_date or status is None or not tag_ids:
         logger.error("入力されていない項目があります。") 
 
         raise HTTPException(status_code=400, detail="必須項目が入力されていません")
@@ -221,9 +222,9 @@ async def post_todo_create(
         except ValidationError:
             logger.warning(f"【URL形式エラー】不正なURL形式です: {link}")
             raise HTTPException(status_code=400, detail="URL形式が不正です")
-    
-    is_completed = True if status == "完了" else False
-    
+
+    is_completed = True if status == "true" else False
+
     todo_in = TodoCreate(
         title=title,
         description=description,
@@ -243,7 +244,7 @@ async def post_todo_create(
 @app.post("/api/todo/{todo_id}/toggle")
 async def toggle_todo_status(
     todo_id: int,
-    status: str = Form(...),
+    status: bool = Form(...),
     db: Session = Depends(get_db)
 ):
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
@@ -301,18 +302,17 @@ async def update_todo(
     title: str = Form(...),
     due_date: datetime = Form(...),
     description: str = Form(...),
-    status: str = Form("false"),
+    status: Optional[str] = Form(None),
     tag: str = Form(""),
     link: str = Form(None),
     memo: str = Form(None),
     db: Session = Depends(get_db)
 ):
-    is_completed = True if status == "完了" else False
     
     todo_in = TodoUpdate(
         title=title,
         description=description,
-        status=is_completed,
+        status=status,
         tag=tag,
         link=link,
         memo=memo,
