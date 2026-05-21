@@ -38,7 +38,7 @@ def get_db():
 async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
 
     #todo一覧表示の完了のログ
-    logger.info("[アクセス] Todo一覧ページが表示されました。")
+    logger.info("【アクセス】 Todo一覧ページが表示されました。")
 
     query = db.query(models.Todo)
 
@@ -115,7 +115,7 @@ async def show_todo_form(request: Request):
 @app.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
     #tag一覧表示の完了のログ
-    logger.info("[アクセス] タグ一覧ページが表示されました。")
+    logger.info("【アクセス】 タグ一覧ページが表示されました。")
 
     query = db.query(models.Tag)
 
