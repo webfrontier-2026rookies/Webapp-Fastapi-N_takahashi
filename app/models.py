@@ -11,17 +11,15 @@ class Todo(Base):
     title: Mapped[str] = mapped_column(String(200), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), index=True)
     description: Mapped[str] = mapped_column(Text) 
-    due_date: Mapped[datetime] = mapped_column(DateTime, index=True)
+    due_date: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     status: Mapped[bool] = mapped_column(Boolean, default=False) 
-    tag: Mapped[str] = mapped_column(String(50), index=True)
-    link: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
-    memo: Mapped[Optional[str]] = mapped_column(Text, nullable=True) 
-    
     tags: Mapped[List["Tag"]] = relationship(
         secondary="todo_tag",
         back_populates="todos"
     )
-
+    link: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    memo: Mapped[Optional[str]] = mapped_column(Text, nullable=True) 
+    
 class Tag(Base):
     __tablename__ = "tag"
 
