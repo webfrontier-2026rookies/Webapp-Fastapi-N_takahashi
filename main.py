@@ -36,8 +36,12 @@ def get_db():
 # todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
 async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
+
+    #todo一覧表示の完了のログ
+    logger.info("[アクセス] Todo一覧ページが表示されました。")
+
     query = db.query(models.Todo)
-    
+
     if completed is not None:
         query = query.filter(models.Todo.status == completed)
 
@@ -47,6 +51,10 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
         query = query.filter(
             (models.Todo.title.ilike(search_param)) | (models.Todo.description.ilike(search_param))
         )
+    
+    #検索成功のログ
+    logger.info(f"【Todo検索成功】キーワード '{q}' でTodoの検索が成功しました。")
+
     
     #作成日時の昇順で並び替え
     query = query.order_by(models.Todo.created_at.asc())
@@ -106,6 +114,9 @@ async def show_todo_form(request: Request):
 # tag一覧表示
 @app.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
+    #tag一覧表示の完了のログ
+    logger.info("[アクセス] タグ一覧ページが表示されました。")
+
     query = db.query(models.Tag)
 
     #キーワード検索
@@ -114,6 +125,10 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
         query = query.filter(
             (models.Tag.title.ilike(search_param)) | (models.Tag.description.ilike(search_param))
         )
+
+    #検索成功のログ
+    logger.info(f"【タグ検索成功】キーワード '{q}' でタグの検索が成功しました。")
+
     
     #作成日時の昇順で並び替え
     query = query.order_by(models.Tag.created_at.asc())
@@ -142,6 +157,10 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
 # tag詳細表示
 @app.get("/api/tag/{tag_id}", response_class=HTMLResponse)
 async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
+
+    #tag詳細表示の完了のログ
+    logger.info(f"【アクセス】タグ詳細ページ(ID: {tag_id})が表示されました。")
+
     tag_data = crud.get_tag_by_id(db, tag_id)
     
     #tagデータが存在しない場合のエラーハンドリング
@@ -202,8 +221,9 @@ async def post_todo_create(
         due_date=due_date 
     )
     
+    #todo作成の完了のログ
+    logger.info(f"Todoが作成されました。タイトル: {todo_in.title}, 作成日時: {datetime.now()}, 詳細: {todo_in.description}, 期限: {todo_in.due_date}, タグ: {todo_in.tag}, リンク: {todo_in.link}, メモ: {todo_in.memo}")
     crud.create_todo(db=db, todo=todo_in)
-    
     return RedirectResponse(url="/api/todo", status_code=303)
 
 # todoステータス変更処理
@@ -226,6 +246,8 @@ async def toggle_todo_status(
 @app.delete("/api/todo/{todo_id}")  
 async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     crud.delete_todo(db, todo_id)
+    #todo削除の完了のログ
+    logger.info(f"Todo(ID: {todo_id})が削除されました。")
     return {"status": "success", "message": "Todo deleted successfully"}
 
 
@@ -249,6 +271,7 @@ async def post_tag_create(
         description=description,
         usage=usage
     )
+    logger.info(f"Tagが作成されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
     crud.create_tag(db=db, tag=tag_in)
     return RedirectResponse(url="/api/tag", status_code=303)
 
@@ -284,7 +307,6 @@ async def update_todo(
     )
     
     crud.update_todo(db=db, todo_id=todo_id, todo=todo_in)
-    
     return RedirectResponse(url="/api/todo", status_code=303
 )
 
@@ -304,8 +326,11 @@ async def update_tag(
         description=description,
         usage=usage
     )
-    
+    logger.info(f"Tagが更新されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
     crud.update_tag(db=db, tag_id=tag_id, tag=tag_in)
     
     return RedirectResponse(url="/api/tag", status_code=303
 )
+
+#アプリ起動完了のログ
+logger.info("アプリが起動しました。データベース接続も成功しています。")
