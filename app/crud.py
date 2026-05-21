@@ -50,7 +50,6 @@ def create_tag(db: Session, tag: TagCreate) -> Tag:
         title=tag.title,
         description=tag.description,
         usage=tag.usage,
-        # created_at は server default (func.now()) に任せる
     )
     db.add(db_tag)
     db.commit()
