@@ -63,7 +63,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
     #未完了の表
     active_todos = (
         db.query(models.Todo)
-        .options(joinedload(models.Todo.tags))  # 👈 ✨これを目印として絶対に追加してください！
+        .options(joinedload(models.Todo.tags))  
         .filter(models.Todo.status == False)
         .order_by(models.Todo.created_at.asc())
         .all()
@@ -71,7 +71,7 @@ async def read_root(request: Request, skip: int = 0, limit: int = 10, completed:
     #完了済みの表
     completed_todos = (
         db.query(models.Todo)
-        .options(joinedload(models.Todo.tags))  # 👈 ✨これを目印として絶対に追加してください！
+        .options(joinedload(models.Todo.tags))
         .filter(models.Todo.status == True)
         .order_by(models.Todo.created_at.asc())
         .all()
