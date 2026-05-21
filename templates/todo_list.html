@@ -62,7 +62,13 @@
           <td>{{ todo.title }}</td>
           <td>{{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}</td>
           <td><span style="color: #ff9800">未完了</span></td>
-          <td>{{ todo.tag }}</td>
+          <td>
+            {% for tag in todo.tags %}
+            <span class="badge bg-secondary">{{ tag.title }}</span>
+            {% else %}
+            <span class="text-muted small">タグなし</span>
+            {% endfor %}
+          </td>
           <td>
             <div>
               <form
@@ -125,7 +131,13 @@
           <td><del>{{ todo.title }}</del></td>
           <td><del>{{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}</del></td>
           <td><span style="color: #4caf50">完了</span></td>
-          <td>{{ todo.tag }}</td>
+          <td>
+            {% for tag in todo.tags %}
+            <span class="badge bg-secondary">{{ tag.title }}</span>
+            {% else %}
+            <span class="text-muted small">タグなし</span>
+            {% endfor %}
+          </td>
           <td>
             <div>
               <form
