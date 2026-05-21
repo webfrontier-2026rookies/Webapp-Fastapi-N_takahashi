@@ -269,19 +269,17 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
 @app.post("/api/tag") 
 async def post_tag_create(
     title: str = Form(...),
-    created_at: datetime = Form(None),
     description: str = Form(...),
     usage: str = Form(None),
     db: Session = Depends(get_db),
 ):
     #必須項目が入力されていないときのエラー文
-    if not title or not description or not created_at:
+    if not title or not description:
         logger.error("入力されていない項目があります。") 
 
         raise HTTPException(status_code=400, detail="必須項目が入力されていません")
     tag_in = TagCreate(
         title=title,
-        created_at=created_at,
         description=description,
         usage=usage
     )
