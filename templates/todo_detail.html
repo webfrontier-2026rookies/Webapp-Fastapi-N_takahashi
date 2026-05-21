@@ -34,7 +34,13 @@
       </div>
 
       <div class="label">タグ</div>
-      <div class="value">{{ todo.tag }}</div>
+      <div class="value">
+        {% for tag in todo.tags %}
+        <span class="badge bg-secondary">{{ tag.title }}</span>
+        {% else %}
+        <span class="text-muted small">タグなし</span>
+        {% endfor %}
+      </div>
 
       <div class="label">リンク</div>
       <div class="value">

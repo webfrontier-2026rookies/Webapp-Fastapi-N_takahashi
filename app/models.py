@@ -11,7 +11,7 @@ class Todo(Base):
     title: Mapped[str] = mapped_column(String(200), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), index=True)
     description: Mapped[str] = mapped_column(Text) 
-    due_date: Mapped[Optional[str]] = mapped_column(nullable=True)
+    due_date: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     status: Mapped[bool] = mapped_column(Boolean, default=False) 
     tags: Mapped[List["Tag"]] = relationship(
         secondary="todo_tag",
