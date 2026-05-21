@@ -10,7 +10,7 @@ class TodoBase(BaseModel):
     
 class TodoCreate(TodoBase):
     due_date: Optional[datetime] = None
-    status: Optional[bool] = False
+    status: bool = False
     tag_ids: list[int] = []
     link: Optional[HttpUrl] = None
     memo: Optional[str] = None
