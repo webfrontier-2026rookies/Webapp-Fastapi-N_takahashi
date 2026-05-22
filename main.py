@@ -217,7 +217,7 @@ async def post_todo_create(
 @app.post("/api/todo/{todo_id}/toggle")
 async def toggle_todo_status(
     todo_id: int,
-    status: bool = Form(...),
+    status: Optional[str] = Form(...),
     db: Session = Depends(get_db)
 ):
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
