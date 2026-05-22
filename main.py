@@ -15,14 +15,56 @@ from fastapi_csrf_protect.exceptions import CsrfProtectError
 from pydantic_settings import BaseSettings
 from fastapi.responses import JSONResponse
 import os
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
+ALLOWED_HOSTS = os.getenv("ENVIRONMENT", "development")
+ENV = os.getenv("ENVIRONMENT", "development")
+
 app = FastAPI()
+
+if ENV == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
+)
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        if ENV == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' data:; "
+            "style-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
+            "frame-ancestors 'none'"
+        )
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-    
+
 # todo一覧表示
 @app.get("/api/todo", response_class=HTMLResponse)
 async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
