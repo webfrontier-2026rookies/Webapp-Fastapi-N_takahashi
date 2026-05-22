@@ -9,7 +9,6 @@ from app import crud, models
 from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
-from sqlalchemy.orm import joinedload
 from typing import Optional
 
 logging.basicConfig(level=logging.INFO)
