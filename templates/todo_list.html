@@ -186,19 +186,15 @@
     <script>
       async function deleteTodo(todoId) {
         if (!confirm("本当にこのTodoを削除しますか？")) return;
-
-        try {
-          const response = await fetch(`/api/todo/${todoId}`, {
-            method: "DELETE",
-          });
-
-          if (response.ok) {
-            window.location.reload();
-          } else {
-            alert("Todoの削除に失敗しました。");
-          }
-        } catch (error) {
-          alert("通信エラーが発生しました。");
+        const token = document.cookie.match(/csrf_token=([^;]+)/)?.[1];
+        const response = await fetch(`/api/todo/${todoId}`, {
+          method: "DELETE",
+          headers: { "X-CSRF-Token": token },
+        });
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert("Todoの削除に失敗しました。");
         }
       }
     </script>

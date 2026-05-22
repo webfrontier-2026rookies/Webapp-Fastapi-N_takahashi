@@ -10,6 +10,11 @@ from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
 from typing import Optional
+from fastapi_csrf_protect import CsrfProtect
+from fastapi_csrf_protect.exceptions import CsrfProtectError
+from pydantic_settings import BaseSettings
+from fastapi.responses import JSONResponse
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -87,6 +92,19 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
         name="todo_detail.html",
         context={"todo": todo_data}
     )
+
+class CsrfSettings(BaseSettings):
+    secret_key: str = os.getenv("CSRF_SECRET")
+    cookie_samesite: str = "lax"
+    cookie_secure: bool = True
+
+@CsrfProtect.load_config
+def get_csrf_config():
+    return CsrfSettings()
+
+@app.exception_handler(CsrfProtectError)
+async def csrf_handler(request: Request, exc: CsrfProtectError):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 # todo作成フォーム表示用
 @app.get("/todo/create")
