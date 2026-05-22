@@ -1,0 +1,11 @@
+jobs:
+  encoding-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify requirements.txt is UTF-8
+        run: |
+          if file requirements.txt | grep -q "UTF-16"; then
+            echo "::error::requirements.txt is UTF-16, expected UTF-8"
+            exit 1
+          fi
