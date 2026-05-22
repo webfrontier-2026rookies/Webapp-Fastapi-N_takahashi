@@ -17,7 +17,7 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     echo=ECHO_SQL,
     pool_pre_ping=True,
-    pool_recycle=1800,
+    pool_recycle=3600,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
