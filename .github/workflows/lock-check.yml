@@ -1,0 +1,11 @@
+on: [push, pull_request]
+jobs:
+  lock-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pip-tools
+      - name: Verify lockfile is up to date
+        run: |
+          pip-compile requirements.in -o requirements.txt.new
+          diff requirements.txt requirements.txt.new
