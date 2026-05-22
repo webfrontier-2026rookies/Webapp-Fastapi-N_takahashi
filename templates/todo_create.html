@@ -13,7 +13,13 @@
     <form action="/api/todo" method="post" class="create-form">
       <div class="form-group">
         <label>タイトル:</label>
-        <input type="text" name="title" required />
+        <input
+          type="text"
+          name="title"
+          required
+          name="csrf-token"
+          value="{{ csrf_token }}"
+        />
       </div>
       <div class="form-group">
         <label>詳細:</label>
