@@ -27,8 +27,6 @@ services:
       - "${PORT_APP}"
     environment:
       DATABASE_URL: ${DB_URL}
-      SECRET_KEY: iwasa0419
-
     env_file:
       - .env
 
