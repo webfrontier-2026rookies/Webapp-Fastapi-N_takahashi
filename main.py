@@ -42,6 +42,7 @@ ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
 ALLOWED_HOSTS = os.getenv("ENVIRONMENT", "development")
 ENV = os.getenv("ENVIRONMENT", "development")
 
+
 app = FastAPI()
 
 if ENV == "production":
