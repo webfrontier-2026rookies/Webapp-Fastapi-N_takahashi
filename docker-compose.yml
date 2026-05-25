@@ -1,6 +1,11 @@
 services:
   db:
     image: postgres:15
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c idle_in_transaction_session_timeout=60000
     container_name: fastapi_db
     restart: always
     stop_grace_period: 1m30s
