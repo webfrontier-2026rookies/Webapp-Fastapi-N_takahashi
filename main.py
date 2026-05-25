@@ -22,6 +22,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from app.database import engine
 
 #独自のIP取得の関数
 def get_real_ip(request: Request) -> str:
@@ -34,6 +35,8 @@ def escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 limiter = Limiter(key_func=get_remote_address)
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.state.limiter = limiter
