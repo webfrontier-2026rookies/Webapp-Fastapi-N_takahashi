@@ -12,7 +12,7 @@ services:
       - "${POSTGRES_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    
+
   app:
     build: .
     container_name: fastapi_app
@@ -22,6 +22,9 @@ services:
       - "${PORT_APP}"
     environment:
       DATABASE_URL: ${DB_URL}
+
+    env_file:
+      - .env
 
     volumes:
       - .:/app
