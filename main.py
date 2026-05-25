@@ -95,6 +95,8 @@ async def read_root(
     base_query = db.query(models.Todo)
     if completed is not None:
         base_query = base_query.filter(models.Todo.status == completed)
+
+    #キーワード検索の処理
     if q:
         safe_q = escape_like(q)
         search_param = f"%{safe_q}%"
@@ -107,6 +109,7 @@ async def read_root(
     total_count = base_query.count()
     todo_list = base_query.offset(skip).limit(limit).all()
 
+    #完了と未完了のtodoを分ける
     active_todos = [t for t in todo_list if not t.status]
     completed_todos = [t for t in todo_list if t.status]
 
