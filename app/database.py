@@ -12,12 +12,20 @@ if not SQLALCHEMY_DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set")
 
 ECHO_SQL = os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true"
+POOL_SIZE = int(os.getenv("DB_POOL_SIZE", "10"))
+MAX_OVERFLOW = int(os.getenv("DB_MAX_OVERFLOW", "20"))
+POOL_RECYCLE = int(os.getenv("DB_POOL_RECYCLE", "1800")) 
+POOL_TIMEOUT = int(os.getenv("DB_POOL_TIMEOUT", "30"))
+
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     echo=ECHO_SQL,
     pool_pre_ping=True,
-    pool_recycle=3600,
+    pool_recycle=POOL_RECYCLE,
+    pool_timeout=POOL_TIMEOUT,
+    pool_size=POOL_SIZE,
+    pool_overflow=MAX_OVERFLOW,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
