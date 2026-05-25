@@ -22,7 +22,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-import app
 
 #独自のIP取得の関数
 def get_real_ip(request: Request) -> str:
@@ -31,7 +30,12 @@ def get_real_ip(request: Request) -> str:
         return forwarded.split(",")[0].strip()
     return request.client.host
 
+def escape_like(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
 limiter = Limiter(key_func=get_remote_address)
+
+app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -41,9 +45,6 @@ logger = logging.getLogger(__name__)
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
 ALLOWED_HOSTS = os.getenv("ENVIRONMENT", "development")
 ENV = os.getenv("ENVIRONMENT", "development")
-
-
-app = FastAPI()
 
 if ENV == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
@@ -81,58 +82,51 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # todo一覧表示
+@limiter.limit("60/minute")
 @app.get("/api/todo", response_class=HTMLResponse)
-async def read_root(request: Request, skip: int = 0, limit: int = 10, completed: bool = None, db: Session = Depends(get_db), q: str = None,):
-
-    #todo一覧表示の完了のログ
-    logger.info("【アクセス】 Todo一覧ページが表示されました。")
-
-    query = db.query(models.Todo)
-
+async def read_root(
+    request: Request,
+    skip: int = 0,
+    limit: int = 10,
+    completed: bool | None = None,
+    q: str | None = None,
+    db: Session = Depends(get_db),
+):
+    base_query = db.query(models.Todo)
     if completed is not None:
-        query = query.filter(models.Todo.status == completed)
-
-    #キーワードの検索
+        base_query = base_query.filter(models.Todo.status == completed)
     if q:
-        search_param = f"%{q}%"
-        query = query.filter(
-            (models.Todo.title.ilike(search_param)) | (models.Todo.description.ilike(search_param))
+        safe_q = escape_like(q)
+        search_param = f"%{safe_q}%"
+        base_query = base_query.filter(
+            models.Todo.title.ilike(search_param, escape="\\") |
+            models.Todo.description.ilike(search_param, escape="\\")
         )
-    
-    #検索成功のログ
-    logger.info(f"【Todo検索成功】キーワード '{q}' でTodoの検索が成功しました。")
+    base_query = base_query.order_by(models.Todo.created_at.asc())
 
-    
-    #作成日時の昇順で並び替え
-    query = query.order_by(models.Todo.created_at.asc())
+    total_count = base_query.count()
+    todo_list = base_query.offset(skip).limit(limit).all()
 
-    #未完了の表
-    active_todos = query.filter(models.Todo.status == False).all()
+    active_todos = [t for t in todo_list if not t.status]
+    completed_todos = [t for t in todo_list if t.status]
 
-    #完了済みの表
-    completed_todos = query.filter(models.Todo.status == True).all()
-
-    total_count = query.count()
-        
-    todo_list = query.offset(skip).limit(limit).all()
-    
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
     current_page = (skip // limit) + 1
-    
+
     return templates.TemplateResponse(
         request=request,
         name="todo_list.html",
         context={
             "todo_list": todo_list,
-            "current_limit": limit,
-            "current_skip": skip,
+            "active_todos": active_todos,
+            "completed_todos": completed_todos,
             "total_count": total_count,
             "total_pages": total_pages,
             "current_page": current_page,
+            "current_limit": limit,
+            "current_skip": skip,
             "search_param": q or "",
-            "active_todos": active_todos,
-            "completed_todos": completed_todos,
-        }
+        },
     )
 
 # todo詳細表示
