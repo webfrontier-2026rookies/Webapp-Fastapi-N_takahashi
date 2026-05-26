@@ -3,7 +3,7 @@ import os
 
 from fastapi.testclient import TestClient
 from main import app
-from app.models import Todo, TodoTag
+from app.models import Todo, TodoTag,Tag
 from app.database import get_db
 from datetime import datetime
 
@@ -19,7 +19,6 @@ def test_todo_list_split_by_status():
     # === 1. Arrange（データの準備） ===
     db = next(get_db())
     
-    # 先に子データ（タグ）をお掃除
     db.query(TodoTag).delete()
     db.query(Todo).delete()
     
@@ -48,7 +47,7 @@ def test_todo_list_split_by_status():
     response = client.get("/api/todo")
     assert response.status_code == 200
     
-    data = response.json()
+    data = response
 
     # === 3. Assert（生データの画面出力） ===
     print("\n" + "="*40)
