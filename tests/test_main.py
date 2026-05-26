@@ -59,3 +59,21 @@ def test_todo_list_split_by_status():
     assert data is not None
     
     db.close()
+
+def test_todo_detail_not_found():
+    db = next(get_db())
+
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+    db.commit()
+    db.close()
+
+    response = client.get("/api/todo/999999")
+
+    data = response.json()
+    print("\n" + "="*40)
+    print("🚀 エラー時に返ってきた実際のデータ:")
+    print(data)
+    print("="*40 + "\n")
+
+    assert "detail" in data
