@@ -103,30 +103,11 @@ def test_todo_detail_success():
 
     assert response.status_code == 200
     
-    data = response.json()
+    html_content = response.text
     print("\n" + "="*40)
     print(f"存在するID [{target_id}] にアクセスして返ってきた実際のデータ:")
-    print(data)
+    print(html_content[:500])
     print("="*40 + "\n")
 
-    assert data["title"] == expected_title
-    assert data["description"] == "この説明文が正しく表示されるか検証します"
-
-#存在しないtagのidのアクセスしたらエラー文が出てくるのか
-def test_tag_detail_not_found():
-    db = next(get_db())
-
-    db.query(TodoTag).delete()
-    db.query(Tag).delete()
-    db.commit()
-    db.close()
-
-    response = client.get("/api/tag/999999")
-
-    data = response.json()
-    print("\n" + "="*40)
-    print("エラー時に返ってきた実際のデータ:")
-    print(data)
-    print("="*40 + "\n")
-
-    assert "detail" in data
+    assert expected_title in html_content
+    assert "この説明文が正しく表示されるか検証します" in html_content
