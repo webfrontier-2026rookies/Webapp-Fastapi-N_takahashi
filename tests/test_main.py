@@ -52,7 +52,7 @@ def test_todo_list_split_by_status():
 
     # === 3. Assert（生データの画面出力） ===
     print("\n" + "="*40)
-    print("🚀 アプリから返ってきた実際のデータはこれです！")
+    print("アプリから返ってきた実際のデータ")
     print(data)
     print("="*40 + "\n")
     
@@ -72,7 +72,7 @@ def test_todo_detail_not_found():
 
     data = response.json()
     print("\n" + "="*40)
-    print("🚀 エラー時に返ってきた実際のデータ:")
+    print("エラー時に返ってきた実際のデータ:")
     print(data)
     print("="*40 + "\n")
 
