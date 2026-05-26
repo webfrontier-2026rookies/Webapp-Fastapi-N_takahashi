@@ -60,6 +60,7 @@ def test_todo_list_split_by_status():
     
     db.close()
 
+#存在しないtodoのidのアクセスしたらエラー文が出てくるのか
 def test_todo_detail_not_found():
     db = next(get_db())
 
@@ -77,3 +78,37 @@ def test_todo_detail_not_found():
     print("="*40 + "\n")
 
     assert "detail" in data
+
+#存在するtodoのidのアクセスしたら表示されるのか
+def test_todo_detail_success():
+    db = next(get_db())
+
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+
+    test_todo = Todo(
+        title="詳細テスト用のタスク",
+        description="この説明文が正しく表示されるか検証します",
+        due_date=datetime.now()
+    )
+    db.add(test_todo)
+    db.commit()
+    db.refresh(test_todo)
+
+    target_id = test_todo.id
+    expected_title = test_todo.title
+    
+    db.close()
+
+    response = client.get(f"/api/todo/{target_id}")
+
+    assert response.status_code == 200
+    
+    data = response.json()
+    print("\n" + "="*40)
+    print(f"存在するID [{target_id}] にアクセスして返ってきた実際のデータ:")
+    print(data)
+    print("="*40 + "\n")
+
+    assert data["title"] == expected_title
+    assert data["description"] == "この説明文が正しく表示されるか検証します"
