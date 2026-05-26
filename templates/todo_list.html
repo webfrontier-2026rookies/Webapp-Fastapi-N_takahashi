@@ -132,7 +132,12 @@
         <tr style="background-color: #fafafa; color: #777">
           <td><del>{{ todo.id }}</del></td>
           <td><del>{{ todo.title }}</del></td>
-          <td><del>{{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}</del></td>
+          <td>
+            <del>
+              {% if todo.due_date %} {{ todo.due_date.strftime('%Y/%m/%d %H:%M')
+              }} {% else %} 期限なし {% endif %}
+            </del>
+          </td>
           <td><span style="color: #4caf50">完了</span></td>
           <td>
             {% for tag in todo.tags %}
