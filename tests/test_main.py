@@ -113,6 +113,7 @@ def test_todo_detail_success():
     assert data["title"] == expected_title
     assert data["description"] == "この説明文が正しく表示されるか検証します"
 
+#存在しないtagのidのアクセスしたらエラー文が出てくるのか
 def test_tag_detail_not_found():
     db = next(get_db())
 
