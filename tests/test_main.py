@@ -3,7 +3,7 @@ import os
 
 from fastapi.testclient import TestClient
 from main import app
-from app.models import Todo, TodoTag
+from app.models import Todo, TodoTag,Tag
 from app.database import get_db
 from datetime import datetime
 
@@ -112,3 +112,21 @@ def test_todo_detail_success():
 
     assert data["title"] == expected_title
     assert data["description"] == "この説明文が正しく表示されるか検証します"
+
+def test_tag_detail_not_found():
+    db = next(get_db())
+
+    db.query(TodoTag).delete()
+    db.query(Tag).delete()
+    db.commit()
+    db.close()
+
+    response = client.get("/api/tag/999999")
+
+    data = response.json()
+    print("\n" + "="*40)
+    print("エラー時に返ってきた実際のデータ:")
+    print(data)
+    print("="*40 + "\n")
+
+    assert "detail" in data
