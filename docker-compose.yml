@@ -26,11 +26,32 @@ services:
     ports:
       - "${PORT_APP}"
     environment:
-      DATABASE_URL: ${DB_URL}
+      ENVIROMENT: development
+      DATABASE_URL: ${DATABASE_URL}
     env_file:
       - .env
 
     volumes:
       - .:/app
+
+  #テスト用
+  test_app:
+    build: .
+    volumes:
+      - .:/app
+    env_file:
+      - .env.test
+    ports:
+      - ${PORT_APP}
+    depends_on:
+      - test_db
+
+  test_db:
+    image: postgres:15
+    env_file:
+      - .env.test
+    ports:
+      - "5433:5432"
+
 volumes:
   postgres_data:
