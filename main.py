@@ -298,6 +298,11 @@ async def post_todo_create(
         memo=memo,
         due_date=due_date 
     )
+
+    logger.debug(f"【デバッグ】画面からPOSTされた直後の生の辞書データ: {todo_in.model_dump()}")
+
+    #どこまで進んだかのデバッグ文
+    logger.debug("【デバッグ】これよりデータベースへの保存処理を開始します...")
     
     #todo作成の完了のログ
     logger.info(f"Todoが作成されました。タイトル: {todo_in.title}, 作成日時: {datetime.now()}, 詳細: {todo_in.description}, 期限: {todo_in.due_date}, タグ: {todo_in.tag_ids}, リンク: {todo_in.link}, メモ: {todo_in.memo}")
