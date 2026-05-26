@@ -23,8 +23,10 @@
 
       <div class="label">期限</div>
       <div class="value">
-        {% if todo.due_date %} {{ todo.due_date.strftime('%Y/%m/%d %H:%M') }} {%
-        else %} 期限なし {% endif %}
+        <div class="value">
+          {% if todo.due_date %} {{ todo.due_date.strftime('%Y/%m/%d %H:%M') }}
+          {% else %} 期限なし {% endif %}
+        </div>
       </div>
 
       <div class="label">ステータス</div>
