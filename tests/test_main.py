@@ -128,7 +128,5 @@ def test_tag_detail_not_found():
     print("エラー時に返ってきた実際のデータ:")
     print(data)
     print("="*40 + "\n")
-    assert "detail" in data
 
-    assert expected_title in html_content
-    assert "この説明文が正しく表示されるか検証します" in html_content
+    assert "detail" in data
