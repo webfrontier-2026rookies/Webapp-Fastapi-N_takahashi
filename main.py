@@ -23,6 +23,14 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.database import engine
+import shutil
+
+#ディスク容量が10%を下回っているときの警告ログ
+def check_disk_space():
+    total, used,free = shutil.disk_usage("/")
+    free_percentage = (free/total) * 100
+    if free_percentage < 10:
+        logger.warning(f"【ディスク容量警告】ディスクの空き容量が10%を下回っています。現在の空き容量: {free_percentage:.2f}%")
 
 #独自のIP取得の関数
 def get_real_ip(request: Request) -> str:
@@ -83,6 +91,10 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+@app.on_event("startup")
+def on_startup():
+    check_disk_space()
 
 # todo一覧表示
 @limiter.limit("60/minute")
@@ -244,7 +256,7 @@ async def show_tag_form(request: Request):
     )
 
 # todo作成処理
-@app.post("/api/todo") 
+@app.post("/api/todo")
 async def post_todo_create(
     title: str = Form(...),
     due_date: datetime =  Form(...), 
@@ -255,6 +267,11 @@ async def post_todo_create(
     db: Session = Depends(get_db),
     tag_ids: list[int] = Form(default=[]),
 ):
+    
+    #期限が過去の日付のときのエラー文
+    if due_date < datetime.now():
+        logger.warning(f"【期限エラー】過去の日付が入力されました: {due_date}")
+        raise HTTPException(status_code=400, detail="期限は未来の日付を指定してください")
     
     #必須項目が入力されていないときのエラー文
     if not title or not description or not due_date or status is None or not tag_ids:
