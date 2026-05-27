@@ -128,8 +128,8 @@ def test_tag_detail_not_found():
     print("エラー時に返ってきた実際のデータ:")
     print(data)
     print("="*40 + "\n")
-    assert "detail" in data
 
+<<<<<<< HEAD
 #todo一覧で検索した場合、対象のタスクだけに絞り込まれて、並び変わるかどうかのテストコード
 def test_search_rearrange():
     db = next(get_db())
@@ -174,3 +174,6 @@ def test_search_rearrange():
     idx_tomorrow = html_content.find("スーパーで買い物")
     
     assert idx_today > idx_tomorrow  
+=======
+    assert "detail" in data
+>>>>>>> d029837a2432d107e2c4fa724941a1e123382a87
