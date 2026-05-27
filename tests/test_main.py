@@ -255,3 +255,33 @@ def test_todo_status_change_return():
     assert updated_todo.status is False
     
     new_db.close()
+
+#todo削除処理の指定したTODOのIDに対して削除リクエストを送ったとき、データベースから該当するデータが完全に消去されるか？のテストコード
+def test_todo_delete():
+    db = next(get_db())
+    db.query(Todo).delete()
+
+    todo = Todo(
+        title="削除テスト",
+        due_date=datetime.now() + timedelta(days=6),
+        status=False,
+        description="削除テスト確認", 
+    )
+
+    db.add(todo)
+    db.commit()
+
+    todo_id = todo.id
+    db.close()
+
+    response = client.delete(f"/api/todo/{todo_id}")
+
+    assert response.status_code == 200
+
+    new_db = next(get_db())
+    deleted_todo = new_db.query(Todo).filter(Todo.id == todo_id).first()
+
+    assert deleted_todo is None
+
+    new_db.close()
+
