@@ -1,15 +1,17 @@
 import sys
 import os
+from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 from main import app
 from app.models import Todo, TodoTag, Tag
 from app.database import get_db
-from datetime import datetime, timedelta
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
 
-# テスト用クライアントの作成
 client = TestClient(app)
 
 def test_todo_list_split_by_status():
@@ -173,3 +175,29 @@ def test_search_rearrange():
     idx_tomorrow = html_content.find("スーパーで買い物")
     
     assert idx_today > idx_tomorrow  
+
+#todo作成処理のタイトルや期限のデータを送信したとき、データベースに新しいTODOが1件増えているか？のテストコード
+def test_todo_create_add_db():
+    db = next(get_db())
+    db.query(Todo).delete()
+
+    todo1 = Todo(
+        title="テスト",
+        description="教室でテストを行う",  
+        due_date=datetime.now() + timedelta(days=1),
+        status=False
+    )
+
+    db.add(todo1)
+    db.commit()
+
+    queried_todo = db.query(Todo).filter(Todo.title == "テスト").first()
+
+    assert queried_todo is not None
+
+    assert queried_todo.description == "教室でテストを行う"
+    assert queried_todo.status is False
+
+    db.close()
+
+
