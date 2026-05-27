@@ -47,6 +47,9 @@
                     <button type="button"  style="background-color: red; color: white;" onclick="deleteTag('{{ tag.id }}')">
                             削除
                     </button>
+                    <form action="/api/tag/{{ tag.id }}" method="put" style="margin: 0;">
+                        <button type="submit">更新</button>
+                    </form>
                 </td>
             </tr>
         {% endfor %}

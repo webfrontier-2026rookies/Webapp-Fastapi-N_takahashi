@@ -20,7 +20,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     container_name: fastapi_app
     depends_on:
       - db
@@ -28,16 +30,17 @@ services:
       - "${PORT_APP}"
     environment:
       ENVIROMENT: development
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DB_URL}
     env_file:
       - .env
-
     volumes:
       - .:/app
 
   #テスト用
   test_app:
-    build: .
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     volumes:
       - .:/app
     env_file:
