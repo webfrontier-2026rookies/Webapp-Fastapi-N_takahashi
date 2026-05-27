@@ -201,7 +201,7 @@ def test_todo_create_add_db():
     db.close()
 
 #todoステータス変更処理の既存の未完了タスクに対して /api/todo/{id}/toggle に status="true" を POST したら、DBの値が True（完了）に書き換わるか？のテストコード
-def test_todo_status_change():
+def test_todo_status_change_complete():
     db = next(get_db())
     db.query(Todo).delete()
 
@@ -218,8 +218,8 @@ def test_todo_status_change():
     todo_id = todo1.id
     db.close()
 
-    response = client.post("/api/todo/{todo_id}/toggle", data={})
-    assert response.status_code in [200,302]
+    response = client.post(f"/api/todo/{todo_id}/toggle", data={"status": "true"})
+    assert response.status_code == 200
 
     new_db = next(get_db())
     updated_todo = new_db.query(Todo).filter(Todo.id == todo_id).first()
@@ -228,6 +228,30 @@ def test_todo_status_change():
     
     new_db.close()
 
+#todoステータス変更処理の完了済みのタスクに対して未完了に戻すを押したら未完了に戻るか？のテストコード
+def test_todo_status_change_return():
+    db = next(get_db())
+    db.query(Todo).delete()
 
+    todo =Todo(
+        title="時間確認",
+        due_date=datetime.now() + timedelta(days=6),
+        status=False,
+        description="時間を時計で確認",  
+    )
 
+    db.add(todo)
+    db.commit()
 
+    todo_id = todo.id
+    db.close()
+
+    response = client.post(f"/api/todo/{todo_id}/toggle", data={"status": "false"})
+    assert response.status_code == 200
+
+    new_db = next(get_db())
+    updated_todo = new_db.query(Todo).filter(Todo.id == todo_id).first()
+
+    assert updated_todo.status is False
+    
+    new_db.close()
