@@ -285,3 +285,30 @@ def test_todo_delete():
 
     new_db.close()
 
+#tag削除処理のタグを削除したとき、データベースからそのタグが消えるか？のテストコード
+def test_tag_delete():
+    db = next(get_db())
+    db.query(Todo).delete()
+
+    tag = Tag(
+        title="タグ削除テスト",
+        usage="テストするとき",
+        description="タグ削除テスト確認", 
+    )
+
+    db.add(tag)
+    db.commit()
+
+    tag_id = tag.id
+    db.close()
+
+    response = client.delete(f"/api/todo/{tag_id}")
+
+    assert response.status_code == 200
+
+    new_db = next(get_db())
+    deleted_tag = new_db.query(Todo).filter(Todo.id == tag_id).first()
+
+    assert deleted_tag is None
+
+    new_db.close()
