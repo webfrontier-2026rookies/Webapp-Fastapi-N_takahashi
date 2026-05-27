@@ -257,8 +257,18 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     logger.info(f"Todo(ID: {todo_id})が削除されました。")
     return {"status": "success", "message": "Todo deleted successfully"}
 
+
+#todo更新画面表示
+@router.get("/todo/update")
+async def show_todo_update(request: Request, db: Session = Depends(get_db)):
+    tags = db.query(models.Tag).order_by(models.Tag.title).all()
+    return templates.TemplateResponse(
+        request=request, name="todo_update.html", context={"tags": tags},
+    )
+
+
 #todo更新処理
-@router.put("/api/todo/{todo_id}")
+@router.post("/api/todo/{todo_id}/update")
 async def update_todo(
     todo_id: int,
     title: str = Form(...),
@@ -280,12 +290,11 @@ async def update_todo(
         memo=memo,
         due_date=due_date
     )
-    
-    crud.update_todo(db=db, todo_id=todo_id, todo=todo_in)
 
-    if update_todo is None:
+    updated_data = crud.update_todo(db=db, todo_id=todo_id, todo=todo_in)
+
+    if updated_data is None:
         logger.error(f"【Todo更新エラー】ID {todo_id} のTodoデータが見つかりませんでした。")
         raise HTTPException(status_code=404, detail="Todoが見つかりませんでした。")
     
-    return RedirectResponse(url="/api/todo", status_code=303
-)
+    return RedirectResponse(url="/", status_code=303)
