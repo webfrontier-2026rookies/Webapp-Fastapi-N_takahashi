@@ -200,4 +200,34 @@ def test_todo_create_add_db():
 
     db.close()
 
+#todoステータス変更処理の既存の未完了タスクに対して /api/todo/{id}/toggle に status="true" を POST したら、DBの値が True（完了）に書き換わるか？のテストコード
+def test_todo_status_change():
+    db = next(get_db())
+    db.query(Todo).delete()
+
+    todo1 =Todo(
+        title="起動テスト",
+        due_date=datetime.now() + timedelta(days=3),
+        status=False,
+        description="パソコン室でテストを行う",  
+    )
+
+    db.add(todo1)
+    db.commit()
+
+    todo_id = todo1.id
+    db.close()
+
+    response = client.post("/api/todo/{todo_id}/toggle", data={})
+    assert response.status_code in [200,302]
+
+    new_db = next(get_db())
+    updated_todo = new_db.query(Todo).filter(Todo.id == todo_id).first()
+
+    assert updated_todo.status is True
+    
+    new_db.close()
+
+
+
 

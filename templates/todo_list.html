@@ -60,10 +60,10 @@
         <tr>
           <td><a href="/api/todo/{{ todo.id }}">{{ todo.id }}</a></td>
           <td>{{ todo.title }}</td>
-          <div class="value">
+          <td class="value">
             {% if todo.due_date %} {{ todo.due_date.strftime('%Y/%m/%d %H:%M')}}
             {% else %} 期限なし {% endif %}
-          </div>
+          </td>
           <td><span style="color: #ff9800">未完了</span></td>
           <td>
             {% for tag in todo.tags %}
