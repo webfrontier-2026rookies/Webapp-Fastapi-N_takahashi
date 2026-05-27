@@ -3,9 +3,9 @@ import os
 
 from fastapi.testclient import TestClient
 from main import app
-from app.models import Todo, TodoTag,Tag
+from app.models import Todo, TodoTag, Tag
 from app.database import get_db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -129,4 +129,51 @@ def test_tag_detail_not_found():
     print(data)
     print("="*40 + "\n")
 
+<<<<<<< HEAD
+#todo一覧で検索した場合、対象のタスクだけに絞り込まれて、並び変わるかどうかのテストコード
+def test_search_rearrange():
+    db = next(get_db())
+    db.query(Todo).delete()
+
+    todo1 = Todo(
+        title="スーパーで買い物",
+        description="牛乳を買う",  
+        due_date=datetime.now() + timedelta(days=1),
+        status=False
+    )
+    todo2 = Todo(
+        title="デパ地下で買い物",
+        description="お惣菜を買う",
+        due_date=datetime.now(), 
+        status=False
+    )
+    todo3 = Todo(
+        title="プログラミングの勉強",
+        description="FastAPIのテストを書く",
+        due_date=datetime.now() + timedelta(days=5),
+        status=False
+    )
+
+    db.add_all([todo1, todo2, todo3])
+    db.commit()
+
+    # URLを呼び出す
+    response = client.get("/api/todo?q=買い物")
+    assert response.status_code == 200
+
+    html_content = response.text
+    
+    db.close()
+
+    # === 3. Assert（HTML画面の答え合わせ） ===
+    assert "スーパーで買い物" in html_content
+    assert "デパ地下で買い物" in html_content
+    assert "プログラミングの勉強" not in html_content
+
+    idx_today = html_content.find("デパ地下で買い物")
+    idx_tomorrow = html_content.find("スーパーで買い物")
+    
+    assert idx_today > idx_tomorrow  
+=======
     assert "detail" in data
+>>>>>>> d029837a2432d107e2c4fa724941a1e123382a87
