@@ -258,15 +258,13 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Todo deleted successfully"}
 
 
-# --- ① todo更新画面表示 ---
+#todo更新画面表示
 @router.get("/todo/{todo_id}/edit")
 async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db)):
-    # 1. 編集対象のTODOをDBから1件取得
     todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
         
-    # 2. セレクトボックス用の全タグ取得（もしTagモデルの並び替えがnameならmodels.Tag.nameに直してください）
     tags = db.query(models.Tag).order_by(models.Tag.title).all() 
     
     return templates.TemplateResponse(
@@ -276,7 +274,7 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
     )
 
 
-# --- ② todo更新処理 ---
+#todo更新処理
 class TodoWithTagUpdate(BaseModel):
     title: str
     description: str

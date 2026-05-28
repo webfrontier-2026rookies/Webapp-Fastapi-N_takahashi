@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 from main import app
@@ -52,7 +52,7 @@ def test_todo_list():
         title="一覧表示のテスト用TODO",
         description="このTODOが画面やAPIから見えれば合格です",
         due_date=datetime.now(),
-        status=False,
+        status=False
     )
     db.add(test_todo)
     db.commit()
@@ -64,3 +64,28 @@ def test_todo_list():
     assert "一覧表示のテスト用TODO" in response.text
 
     db.close()
+
+#todoの詳細表示ができるかどうかのテストコード
+def test_todo_detail_page():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+
+    test_todo = Todo(
+        title="詳細表示のテスト用TODO",
+        description="このTODOが画面やAPIから見えれば合格です",
+        due_date=datetime.now() + timedelta(days=5),
+        status=False
+    )
+
+    db.add(test_todo)
+    db.commit()
+
+    response = client.get("/api/todo/{todo_id}")
+
+    assert response.status_code == 200
+    
+    assert "詳細表示のテスト用TODO" in response.text
+
+    db.close()
+
