@@ -20,8 +20,6 @@ def test_todo_create():
     
     db.query(TodoTag).delete()
     db.query(Todo).delete()
-
-    # 💡 タグの指定（tag_ids="テスト" など）を完全に削除して、純粋なTODOモデルの項目だけにします
     todo = Todo(
         title="todoの追加テスト",
         description="todoの追加テストができるかどうかの確認",
@@ -32,7 +30,6 @@ def test_todo_create():
     db.add(todo)
     db.commit()
 
-    # 💡 ここでAPIを叩くときは、ルーター側のPydanticが「tag_id」や「tag_ids」を求めている可能性があるので、もし422エラーが出たらここにデータを追加します
     response = client.post(
         "/api/todo",
         json={
@@ -60,14 +57,10 @@ def test_todo_list():
     db.add(test_todo)
     db.commit()
 
-    # 1. 画面用のURLをGETで叩く
     response = client.get("/api/todo")
 
-    # 2. ステータスコードが 200 OK かチェック
     assert response.status_code == 200
     
-    # 3. ❌ response.json() は絶対に使わない！
-    # ⭕ 代わりに、返ってきたHTMLの文字（text）の中に、さっき入れたタイトルが含まれているか検証する
     assert "一覧表示のテスト用TODO" in response.text
 
     db.close()
