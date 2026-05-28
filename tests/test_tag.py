@@ -31,3 +31,25 @@ def test_tag_create():
     assert response.status_code == 200
 
     db.close()
+
+#tagの一覧表示ができるかどうかのテストコード
+def test_tag_list():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Tag).delete()
+    
+    test_tag = Tag(
+        title="一覧表示のテスト用TAG",
+        description="このTAGが画面やAPIから見えれば合格です",
+        usage="使用方法"
+    )
+    db.add(test_tag)
+    db.commit()
+
+    response = client.get("/api/tag")
+
+    assert response.status_code == 200
+    
+    assert "一覧表示のテスト用TAG" in response.text
+
+    db.close()
