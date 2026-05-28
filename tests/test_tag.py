@@ -73,3 +73,32 @@ def test_todo_detail_page():
     response = client.get(f"/api/tag/{test_tag.id}")
 
     assert response.status_code == 200
+
+#tagの削除ができるかどうかのテストコード
+def test_tag_delete():
+    db = next(get_db())
+    db.query(Tag).delete()
+
+    tag = Tag(
+        title="todo削除テスト",
+        usage="テスト確認の際",
+        description="削除テスト確認", 
+    )
+
+    db.add(tag)
+    db.commit()
+
+    todo_id = tag.id
+    db.close()
+
+    response = client.delete(f"/api/tag/{todo_id}")
+
+    assert response.status_code == 200
+
+    new_db = next(get_db())
+    deleted_tag = new_db.query(Todo).filter(Todo.id == todo_id).first()
+
+    assert deleted_tag is None
+
+    new_db.close()
+
