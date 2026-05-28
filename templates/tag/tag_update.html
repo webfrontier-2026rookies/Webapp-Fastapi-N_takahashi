@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>TAGの更新</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='/todo_update.css') }}"
+    />
+  </head>
+  <body>
+    <h1>TAGの更新</h1>
+
+    <form id="updateForm" class="update-form">
+      <div class="form-group">
+        <label>タイトル:</label>
+        <input
+          type="text"
+          name="title"
+          required
+          name="csrf-token"
+          value="{{ csrf_token }}"
+        />
+      </div>
+      <div class="form-group">
+        <label>詳細:</label>
+        <textarea name="description" required></textarea>
+      </div>
+      <div class="form-group">
+        <label>使用方法:</label>
+        <input type="text" name="usage" />
+      </div>
+
+      <button type="button" onclick="executePutUpdate({ todo_id })">
+        変更を保存する
+      </button>
+    </form>
+
+    <script>
+      async function executePutUpdate(tagId) {
+        const currentTitle = document.getElementById("tagTitle").value;
+        const currentDescription =
+          document.getElementById("todoDescription").value;
+        const currentTagId = document.getElementById("todoTagId").value;
+
+        const response = await fetch(`/api/tag/${tagId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: currentTitle,
+            description: currentDescription,
+            tag_id: parseInt(currentTagId),
+          }),
+        });
+
+        if (response.ok) {
+          window.location.href = "/api/tag";
+        } else {
+          alert("更新に失敗しました。入力内容を確認してください。");
+        }
+      }
+    </script>
+  </body>
+</html>
