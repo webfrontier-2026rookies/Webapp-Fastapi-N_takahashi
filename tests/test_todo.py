@@ -118,7 +118,7 @@ def test_todo_delete():
 
     new_db.close()
 
-#tag削除処理のタグを削除したとき、データベースからそのタグが消えるか？のテストコード
+#todoの削除ができるかどうかのテストコード
 def test_tag_delete():
     db = next(get_db())
     db.query(Todo).delete()
