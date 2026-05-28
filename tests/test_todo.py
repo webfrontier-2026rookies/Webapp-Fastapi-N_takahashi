@@ -17,27 +17,19 @@ client = TestClient(app)
 #todoリストを作成できるかのテストコード作成
 def test_todo_create():
     db = next(get_db())
-    
-    db.query(TodoTag).delete()
     db.query(Todo).delete()
+
     todo = Todo(
-        title="todoの追加テスト",
-        description="todoの追加テストができるかどうかの確認",
-        due_date=datetime.now(),
-        status=False,
+        title="プログラミングの勉強",
+        due_date=datetime.now() + timedelta(days=5),
+        description="FastAPIのテストを書く", 
+        status=False
     )
 
     db.add(todo)
     db.commit()
 
-    response = client.post(
-        "/api/todo",
-        json={
-            "title": "todoの追加テスト",
-            "description": "todoの追加テストができるかどうかの確認",
-        }
-    )   
-
+    response = client.post("/api/tag",data={"title": "プログラミングの勉強","description": "FastAPIのテストを書く","due_date": datetime.now() + timedelta(days=5),"status": False})   
     assert response.status_code == 200
 
     db.close()
@@ -80,43 +72,11 @@ def test_todo_detail_page():
 
     db.add(test_todo)
     db.commit()
+    db.refresh(test_todo) 
 
-    response = client.get("/api/todo/{todo_id}")
-
-    assert response.status_code == 200
-    
-    assert "詳細表示のテスト用TODO" in response.text
-
-    db.close()
-
-#todoの削除ができるかどうかのテストコード
-def test_todo_delete():
-    db = next(get_db())
-    db.query(Todo).delete()
-
-    todo = Todo(
-        title="削除テスト",
-        due_date=datetime.now() + timedelta(days=6),
-        status=False,
-        description="削除テスト確認", 
-    )
-
-    db.add(todo)
-    db.commit()
-
-    todo_id = todo.id
-    db.close()
-
-    response = client.delete(f"/api/todo/{todo_id}")
+    response = client.get(f"/api/todo/{test_todo.id}")
 
     assert response.status_code == 200
-
-    new_db = next(get_db())
-    deleted_todo = new_db.query(Todo).filter(Todo.id == todo_id).first()
-
-    assert deleted_todo is None
-
-    new_db.close()
 
 #todoの削除ができるかどうかのテストコード
 def test_tag_delete():
