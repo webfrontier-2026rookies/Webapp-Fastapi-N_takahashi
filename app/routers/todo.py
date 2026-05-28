@@ -4,11 +4,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import TodoCreate, TodoUpdate
+from app.schemas import TodoCreate
 from app import crud, models
 from datetime import datetime
 import logging
-from pydantic import HttpUrl, ValidationError
+from pydantic import HttpUrl, ValidationError, BaseModel
 from typing import Optional
 from fastapi_csrf_protect import CsrfProtect
 from pydantic_settings import BaseSettings
@@ -88,7 +88,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates/todo")
 
 @app.on_event("startup")
 def on_startup():
@@ -258,43 +258,46 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
     return {"status": "success", "message": "Todo deleted successfully"}
 
 
-#todo更新画面表示
-@router.get("/todo/update")
-async def show_todo_update(request: Request, db: Session = Depends(get_db)):
-    tags = db.query(models.Tag).order_by(models.Tag.title).all()
+# --- ① todo更新画面表示 ---
+@router.get("/todo/{todo_id}/edit")
+async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db)):
+    # 1. 編集対象のTODOをDBから1件取得
+    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if not todo:
+        raise HTTPException(status_code=404, detail="TODOが見つかりません")
+        
+    # 2. セレクトボックス用の全タグ取得（もしTagモデルの並び替えがnameならmodels.Tag.nameに直してください）
+    tags = db.query(models.Tag).order_by(models.Tag.title).all() 
+    
     return templates.TemplateResponse(
-        request=request, name="todo_update.html", context={"tags": tags},
+        request=request, 
+        name="todo_update.html",  # 👈 フォルダ分けのルールに合わせて調整してください
+        context={"request": request, "todo": todo, "tags": tags} # 👈 todo も一緒に画面に送る！
     )
 
 
-#todo更新処理
-@router.post("/api/todo/{todo_id}/update")
-async def update_todo(
-    todo_id: int,
-    title: str = Form(...),
-    due_date: datetime = Form(...),
-    description: str = Form(...),
-    status: Optional[str] = Form(None),
-    tag: str = Form(""),
-    link: str = Form(None),
-    memo: str = Form(None),
+# --- ② todo更新処理 ---
+class TodoWithTagUpdate(BaseModel):
+    title: str
+    description: str
+    due_date: Optional[datetime] = None
+    tag_id: int  
+
+@router.put("/api/todo/{todo_id}")
+async def update_todo_with_tag(
+    todo_id: int, 
+    data: TodoWithTagUpdate,  
     db: Session = Depends(get_db)
 ):
+    db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if not db_todo:
+        raise HTTPException(status_code=404, detail="TODOが見つかりません")
     
-    todo_in = TodoUpdate(
-        title=title,
-        description=description,
-        status=status,
-        tag=tag,
-        link=link,
-        memo=memo,
-        due_date=due_date
-    )
-
-    updated_data = crud.update_todo(db=db, todo_id=todo_id, todo=todo_in)
-
-    if updated_data is None:
-        logger.error(f"【Todo更新エラー】ID {todo_id} のTodoデータが見つかりませんでした。")
-        raise HTTPException(status_code=404, detail="Todoが見つかりませんでした。")
+    db_todo.title = data.title
+    db_todo.description = data.description
+    db_todo.due_date = data.due_date
+    db_todo.tag_id = data.tag_id 
+    db.commit()
+    db.refresh(db_todo)
     
-    return RedirectResponse(url="/", status_code=303)
+    return {"status": "success", "message": "TODOとタグの更新が完了しました"}

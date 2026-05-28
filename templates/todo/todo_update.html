@@ -2,14 +2,14 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <title>TAGの更新</title>
+    <title>TODOの更新</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', path='/todo_update.css') }}"
     />
   </head>
   <body>
-    <h1>TAGの更新</h1>
+    <h1>TODOの更新</h1>
 
     <form id="updateForm" class="update-form">
       <div class="form-group">
@@ -27,8 +27,31 @@
         <textarea name="description" required></textarea>
       </div>
       <div class="form-group">
-        <label>使用方法:</label>
-        <input type="text" name="usage" />
+        <label>期限:</label>
+        <input type="datetime-local" name="due_date" required />
+      </div>
+      <div class="form-group">
+        <label>ステータス:</label>
+        <select name="status" required>
+          <option value="false">未完了</option>
+          <option value="true">完了</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>タグ:</label>
+        <select name="tag_ids" multiple>
+          {% for tag in tags %}
+          <option value="{{ tag.id }}">{{ tag.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>リンク:</label>
+        <input type="url" name="link" />
+      </div>
+      <div class="form-group">
+        <label>メモ:</label>
+        <input type="text" name="memo" />
       </div>
 
       <button type="button" onclick="executePutUpdate({ todo_id })">
@@ -37,13 +60,13 @@
     </form>
 
     <script>
-      async function executePutUpdate(tagId) {
-        const currentTitle = document.getElementById("tagTitle").value;
+      async function executePutUpdate(todoId) {
+        const currentTitle = document.getElementById("todoTitle").value;
         const currentDescription =
           document.getElementById("todoDescription").value;
         const currentTagId = document.getElementById("todoTagId").value;
 
-        const response = await fetch(`/api/tag/${tagId}`, {
+        const response = await fetch(`/api/todo/${todoId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -56,7 +79,7 @@
         });
 
         if (response.ok) {
-          window.location.href = "/api/tag";
+          window.location.href = "/api/todo";
         } else {
           alert("更新に失敗しました。入力内容を確認してください。");
         }
