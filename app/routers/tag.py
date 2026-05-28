@@ -9,6 +9,7 @@ from app import crud, models
 from datetime import datetime
 import logging
 import os
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -84,7 +85,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates/tag")
 
 @app.on_event("startup")
 def on_startup():
@@ -122,7 +123,7 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
     
     return templates.TemplateResponse(
         request=request,
-        name="tag/tag_list.html",
+        name="tag_list.html",
         context={
             "tag_list": tag_list,
             "current_limit": limit,
@@ -150,7 +151,7 @@ async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(ge
         
     return templates.TemplateResponse(
         request=request,
-        name="tag/tag_detail.html",
+        name="tag_detail.html",
         context={"tag": tag_data}
     )
 
@@ -159,7 +160,7 @@ async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(ge
 async def show_tag_form(request: Request):
     return templates.TemplateResponse(
         request=request,
-        name="tag/tag_create.html"
+        name="tag_create.html"
     )
 
 # tag作成処理
@@ -190,31 +191,45 @@ async def delete_tag(tag_id: int, db: Session = Depends(get_db)):
     crud.delete_tag(db, tag_id)
     return {"status": "success", "message": "Deleted successfully"}
 
-#tag更新処理
+# --- ① todo更新画面表示 ---
+@router.get("/todo/{todo_id}/edit")
+async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db)):
+    # 1. 編集対象のTODOをDBから1件取得
+    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if not todo:
+        raise HTTPException(status_code=404, detail="TODOが見つかりません")
+        
+    # 2. セレクトボックス用の全タグ取得（もしTagモデルの並び替えがnameならmodels.Tag.nameに直してください）
+    tags = db.query(models.Tag).order_by(models.Tag.title).all() 
+    
+    return templates.TemplateResponse(
+        request=request, 
+        name="todo_update.html",  # 👈 フォルダ分けのルールに合わせて調整してください
+        context={"request": request, "todo": todo, "tags": tags} # 👈 todo も一緒に画面に送る！
+    )
+
+
+# --- ② todo更新処理 ---
+class TodoWithTagUpdate(BaseModel):
+    title: str
+    description: str
+    usage: int  
+
 @router.put("/api/tag/{tag_id}")
-async def update_tag(
-    tag_id: int,
-    title: str = Form(...),
-    created_at: datetime = Form(None),
-    description: str = Form(...),
-    usage: str = Form(None),
+async def update_todo_with_tag(
+    tag_id: int, 
+    data: TodoWithTagUpdate,
     db: Session = Depends(get_db)
 ):
-    tag_in = TagUpdate(
-        title=title,
-        created_at=created_at,
-        description=description,
-        usage=usage
-    )
-    logger.info(f"Tagが更新されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
-    crud.update_tag(db=db, tag_id=tag_id, tag=tag_in)
-
-    if update_tag is None:
-        logger.error(f"【Tag更新エラー】ID {tag_id} のTagデータが見つかりませんでした。")
-        raise HTTPException(status_code=404, detail="Tagが見つかりませんでした。")
+    db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+    if not db_tag:
+        raise HTTPException(status_code=404, detail="TODOが見つかりません")
     
-    return RedirectResponse(url="/api/tag", status_code=303
-)
-
-#アプリ起動完了のログ
-logger.info("アプリが起動しました。データベース接続も成功しています。")
+    db_tag.title = data.title
+    db_tag.description = data.description
+    db_tag.usage = data.usage  
+    
+    db.commit()
+    db.refresh(db_tag)
+    
+    return {"status": "success", "message": "タグの更新が完了しました"}
