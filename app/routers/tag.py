@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import  TagCreate,  TagUpdate
+from app.schemas import  TagCreate
 from app import crud, models
 from datetime import datetime
 import logging
