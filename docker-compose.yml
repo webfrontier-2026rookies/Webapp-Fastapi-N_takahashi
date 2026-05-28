@@ -49,7 +49,9 @@ services:
       - ${PORT_APP}
     depends_on:
       - test_db
-
+    command: sh -c "pip install pytest pytest-mock httpx && tail -f /dev/null"
+    environment:
+      - PYTHONPATH=/app:/app/app
   test_db:
     image: postgres:15
     env_file:
