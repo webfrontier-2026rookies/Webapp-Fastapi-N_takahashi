@@ -7,3 +7,8 @@ jinja2
 python-multipart
 uvicorn
 gunicorn
+passlib[bcrypt]
+pyjwt
+python-multipart
+fastapi-csrf-protect
+slowapi
