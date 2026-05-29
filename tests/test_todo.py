@@ -106,3 +106,40 @@ def test_tag_delete():
     assert deleted_tag is None
 
     new_db.close()
+
+#todoの更新ができるかどうかのテストコード作成
+def test_todo_update():
+    # 1. データベースの準備
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+
+    test_todo = Todo(
+        title="更新前のTODO",
+        description="これから更新されます",
+        due_date=datetime.now(),
+        status=False,
+    )
+    db.add(test_todo)
+    db.commit()
+
+    # 2. 更新APIを叩く
+    # 💡 URLを「test_todo.id」にし、引数を必ず「json=」にします！
+    response = client.put(
+        f"/api/todo/{test_todo.id}",
+        json={
+            "title": "更新後のTODOタイトル",
+            "description": "無事に更新されました",
+            "tag_id": 1
+        }
+    )
+
+    print("\n🔥 FastAPIからのダメ出し内容（更新）:", response.json())
+    assert response.status_code == 200
+
+    # 3. DBの最終チェック
+    db.refresh(test_todo)
+    assert test_todo.title == "更新後のTODOタイトル"
+    assert test_todo.description == "無事に更新されました"
+
+    db.close()
