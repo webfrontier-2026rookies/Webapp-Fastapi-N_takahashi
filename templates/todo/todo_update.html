@@ -2,19 +2,20 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <title>TODOの更新</title>
+    <title>todoの更新</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', path='/todo_update.css') }}"
     />
   </head>
   <body>
-    <h1>TODOの更新</h1>
+    <h1>todoの更新</h1>
 
     <form id="updateForm" class="update-form">
       <div class="form-group">
         <label>タイトル:</label>
         <input
+          id="todoTitle"
           type="text"
           name="title"
           required
@@ -24,7 +25,7 @@
       </div>
       <div class="form-group">
         <label>詳細:</label>
-        <textarea name="description" required></textarea>
+        <textarea id="todoDescription" name="description" required></textarea>
       </div>
       <div class="form-group">
         <label>期限:</label>
@@ -41,7 +42,7 @@
         <label>タグ:</label>
         <select name="tag_ids" multiple>
           {% for tag in tags %}
-          <option value="{{ tag.id }}">{{ tag.title }}</option>
+          <option id="todoTagId" value="{{ tag.id }}">{{ tag.title }}</option>
           {% endfor %}
         </select>
       </div>
@@ -54,19 +55,19 @@
         <input type="text" name="memo" />
       </div>
 
-      <button type="button" onclick="executePutUpdate({ todo_id })">
+      <button type="button" onclick="executePutUpdate('{{ todo.id }}')">
         変更を保存する
       </button>
     </form>
 
     <script>
-      async function executePutUpdate(todoId) {
+      async function executePutUpdate(todo_id) {
         const currentTitle = document.getElementById("todoTitle").value;
         const currentDescription =
           document.getElementById("todoDescription").value;
         const currentTagId = document.getElementById("todoTagId").value;
 
-        const response = await fetch(`/api/todo/${todoId}`, {
+        const response = await fetch(`/api/todo/${todo_id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -75,6 +76,7 @@
             title: currentTitle,
             description: currentDescription,
             tag_id: parseInt(currentTagId),
+            tag_id: currentTagId ? parseInt(currentTagId) : null,
           }),
         });
 
