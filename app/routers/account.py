@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="templates/account")
 
 # アカウント登録画面の表示
 @router.get("/account/register", response_class=HTMLResponse)
