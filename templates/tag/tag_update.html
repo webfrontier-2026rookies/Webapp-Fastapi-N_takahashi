@@ -9,7 +9,7 @@
     />
   </head>
   <body>
-    <h1>TAGの更新</h1>
+    <h1>tagの更新</h1>
 
     <form id="updateForm" class="update-form">
       <div class="form-group">
@@ -19,17 +19,18 @@
           type="text"
           name="title"
           required
-          name="csrf-token"
-          value="{{ csrf_token }}"
+          value="{{ tag.title }}"
         />
       </div>
       <div class="form-group">
         <label>詳細:</label>
-        <textarea id="tagDescription" name="description" required></textarea>
+        <textarea id="tagDescription" name="description" required>
+{{ tag.description }}</textarea
+        >
       </div>
       <div class="form-group">
         <label>使用方法:</label>
-        <input id="tagUsage" type="text" name="usage" />
+        <input id="tagUsage" type="text" name="usage" value="{{ tag.usage }}" />
       </div>
 
       <button type="button" onclick="executePutUpdate('{{ tag.id }}')">
