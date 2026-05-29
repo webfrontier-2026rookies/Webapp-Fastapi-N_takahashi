@@ -194,7 +194,6 @@ async def delete_tag(tag_id: int, db: Session = Depends(get_db)):
 #tag更新画面表示
 @router.get("/tag/{tag_id}/edit")
 async def show_todo_update(tag_id: int, request: Request, db: Session = Depends(get_db)):
-    # 💡 1. 編集したい特定のタグを1件だけ取得
     tag_data = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
     if not tag_data:
         raise HTTPException(status_code=404, detail="TAGが見つかりません")
@@ -202,7 +201,6 @@ async def show_todo_update(tag_id: int, request: Request, db: Session = Depends(
     return templates.TemplateResponse(
         request=request, 
         name="tag_update.html", 
-        # 💡 変数名を「tag」としてテンプレートに1件だけ渡す
         context={"request": request, "tag": tag_data} 
     )
 
