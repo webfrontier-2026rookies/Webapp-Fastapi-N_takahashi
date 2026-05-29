@@ -58,3 +58,9 @@ class Tag(TagBase):
 
     # SQLAlchemyのモデルをPydanticで使うための設定
     model_config = ConfigDict(from_attributes=True)
+
+class TodoWithTagUpdate(BaseModel):
+    title: str
+    description: str
+    due_date: Optional[datetime] = None
+    tag_id: int  
