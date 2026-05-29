@@ -8,7 +8,7 @@ from app.schemas import TodoCreate
 from app import crud, models
 from datetime import datetime
 import logging
-from pydantic import HttpUrl, ValidationError, BaseModel
+from pydantic import HttpUrl, ValidationError
 from typing import Optional
 from fastapi_csrf_protect import CsrfProtect
 from pydantic_settings import BaseSettings
@@ -22,6 +22,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.database import engine
 import shutil
+from app.schemas import TodoWithTagUpdate
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -275,11 +276,6 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
 
 
 #todo更新処理
-class TodoWithTagUpdate(BaseModel):
-    title: str
-    description: str
-    due_date: Optional[datetime] = None
-    tag_id: int  
 
 @router.put("/api/todo/{todo_id}")
 async def update_todo_with_tag(

@@ -15,6 +15,7 @@
       <div class="form-group">
         <label>タイトル:</label>
         <input
+          id="tagTitle"
           type="text"
           name="title"
           required
@@ -24,26 +25,26 @@
       </div>
       <div class="form-group">
         <label>詳細:</label>
-        <textarea name="description" required></textarea>
+        <textarea id="tagDescription" name="description" required></textarea>
       </div>
       <div class="form-group">
         <label>使用方法:</label>
-        <input type="text" name="usage" />
+        <input id="tagUsage" type="text" name="usage" />
       </div>
 
-      <button type="button" onclick="executePutUpdate({ todo_id })">
+      <button type="button" onclick="executePutUpdate('{{ tag.id }}')">
         変更を保存する
       </button>
     </form>
 
     <script>
-      async function executePutUpdate(tagId) {
+      async function executePutUpdate(tag_id) {
         const currentTitle = document.getElementById("tagTitle").value;
         const currentDescription =
-          document.getElementById("todoDescription").value;
-        const currentTagId = document.getElementById("todoTagId").value;
+          document.getElementById("tagDescription").value;
+        const currentTagUsage = document.getElementById("tagUsage").value;
 
-        const response = await fetch(`/api/tag/${tagId}`, {
+        const response = await fetch(`/api/tag/${tag_id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -51,7 +52,7 @@
           body: JSON.stringify({
             title: currentTitle,
             description: currentDescription,
-            tag_id: parseInt(currentTagId),
+            usage: currentTagUsage,
           }),
         });
 
