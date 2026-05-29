@@ -10,6 +10,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from app.routers import account
 
 #起動時にデータベースのテーブルを自動作成する
 models.Base.metadata.create_all(bind=engine)
@@ -68,3 +69,5 @@ def read_root():
 @app.exception_handler(CsrfProtectError)
 async def csrf_handler(request: Request, exc: CsrfProtectError):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
+
+app.include_router(account.router)
