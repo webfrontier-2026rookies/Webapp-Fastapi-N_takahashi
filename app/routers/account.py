@@ -4,7 +4,6 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 
-# 💡 ルーターとして定義します（HTMLコードはここには書きません）
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
