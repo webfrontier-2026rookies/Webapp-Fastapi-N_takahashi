@@ -4,10 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ログイン</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', path='/register.css') }}"
-    />
+    <link rel="stylesheet" href="{{ url_for('static', path='/login.css') }}" />
   </head>
   <body>
     <h1>ログイン</h1>
@@ -21,9 +18,7 @@
         <input type="text" name="password" required />
       </div>
       <button type="submit" class="register-btn">ログイン</button>
-      <a href="/templates/account/register.html"
-        >アカウント登録画面の方はこちら</a
-      >
+      <a href="/register">アカウント登録画面の方はこちら</a>
     </form>
   </body>
 </html>
