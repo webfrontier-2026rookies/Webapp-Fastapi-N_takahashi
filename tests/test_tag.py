@@ -102,3 +102,32 @@ def test_tag_delete():
 
     new_db.close()
 
+#tagの更新ができるかどうかのテストコード作成
+def test_tag_update():
+    db = next(get_db())
+    db.query(Tag).delete()
+
+    test_tag = Tag(
+        title="更新前のTAG",
+        description="これから更新されます",
+        usage="更新前"
+    )
+    db.add(test_tag)
+    db.commit()
+
+    response = client.put(
+        f"/api/tag/{test_tag.id}",
+        json={
+            "title": "更新後のTAGタイトル",
+            "description": "無事に更新されました",
+            "usage" : "更新後"
+        }
+    )
+    assert response.status_code == 200
+
+    db.refresh(test_tag)
+    assert test_tag.title == "更新後のTAGタイトル"
+    assert test_tag.description == "無事に更新されました"
+    assert test_tag.usage == "更新後"
+
+    db.close()
