@@ -60,6 +60,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 #TODOとタグの部品をアプリにガッチャンコ
 app.include_router(todo.router)
 app.include_router(tag.router)
+app.include_router(account.router)
 
 #ルートURL（生存確認用）
 @app.get("/api/todo")
@@ -69,5 +70,3 @@ def read_root():
 @app.exception_handler(CsrfProtectError)
 async def csrf_handler(request: Request, exc: CsrfProtectError):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
-
-app.include_router(account.router)
