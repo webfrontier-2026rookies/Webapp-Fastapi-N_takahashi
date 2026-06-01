@@ -6,7 +6,6 @@ from app.database import get_db
 from app import models
 from passlib.context import CryptContext
 
-
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
@@ -44,3 +43,21 @@ def register_button_clicked(request: Request, db: Session = Depends (get_db), us
     db.refresh(new_user)
 
     return RedirectResponse(url="/login", status_code=303)
+
+#ログインボタンが押された時の処理
+@router.post("/account/login")
+def login_button_clicked(request: Request, db: Session = Depends(get_db), username: str = Form(...), hashed_password: str = Form(...)):
+    pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+
+    user = db.query(models.User).filter(models.User.username == username).first()
+
+    if not user:
+        return {"error": "ユーザー名、またはパスワードが違います"}
+
+    is_correct = pwd_context.verify(hashed_password, user.hashed_password)
+
+    if not is_correct:
+        return {"error": "ユーザー名、またはパスワードが違います"}
+
+    return {"message": f"ログイン成功！ようこそ、{username}さん！"}
+    
