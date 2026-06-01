@@ -95,6 +95,11 @@ router = APIRouter()
 
 @router.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
+    # ユーザー名を取得
+    username = request.cookies.get("username")
+    if not username:
+        # ログインしてなければ、即座にログイン画面へ
+        return RedirectResponse(url="/login", status_code=303)
     #tag一覧表示の完了のログ
     logger.info("【アクセス】 タグ一覧ページが表示されました。")
 
@@ -158,6 +163,11 @@ async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(ge
 # tag作成フォーム表示用
 @router.get("/tag/create", response_class=HTMLResponse)
 async def show_tag_form(request: Request):
+    # ユーザー名を取得
+    username = request.cookies.get("username")
+    if not username:
+        # ログインしてなければ、即座にログイン画面へ
+        return RedirectResponse(url="/login", status_code=303)
     return templates.TemplateResponse(
         request=request,
         name="tag_create.html"
