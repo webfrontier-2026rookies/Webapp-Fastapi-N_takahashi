@@ -59,5 +59,9 @@ def login_button_clicked(request: Request, db: Session = Depends(get_db), userna
     if not is_correct:
         return {"error": "ユーザー名、またはパスワードが違います"}
 
-    return {"message": f"ログイン成功！ようこそ、{username}さん！"}
+    response = RedirectResponse(url="/api/todo", status_code=303)
+
+    response.set_cookie(key="username", value=username, httponly=True)
+
+    return response
     
