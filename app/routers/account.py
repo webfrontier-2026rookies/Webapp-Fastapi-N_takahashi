@@ -1,13 +1,22 @@
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Request, Depends, Form, HTTPException, status
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
 from passlib.context import CryptContext
+from fastapi import Cookie
+from typing import Optional
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+def get_current_user(username: Optional[str] = Cookie(None)):
+    if not username:
+        return RedirectResponse(
+            url="/account/login",status_code=303)
+    
+    return username
 
 # アカウント登録画面の表示
 @router.get("/register", response_class=HTMLResponse)

@@ -23,6 +23,7 @@ from slowapi.errors import RateLimitExceeded
 from app.database import engine
 import shutil
 from app.schemas import TodoWithTagUpdate
+from app.routers.account import get_current_user
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -108,11 +109,17 @@ async def read_root(
     q: str | None = None,
     db: Session = Depends(get_db),
 ):
+    # ユーザー名を取得
+    username = request.cookies.get("username")
+    if not username:
+        # ログインしてなければ、即座にログイン画面へ
+        return RedirectResponse(url="/login", status_code=303)
+    
     base_query = db.query(models.Todo)
     if completed is not None:
         base_query = base_query.filter(models.Todo.status == completed)
 
-    #キーワード検索の処理
+    # キーワード検索の処理
     if q:
         safe_q = escape_like(q)
         search_param = f"%{safe_q}%"
@@ -125,7 +132,7 @@ async def read_root(
     total_count = base_query.count()
     todo_list = base_query.offset(skip).limit(limit).all()
 
-    #完了と未完了のtodoを分ける
+    # 完了と未完了のtodoを分ける
     active_todos = [t for t in todo_list if not t.status]
     completed_todos = [t for t in todo_list if t.status]
 
@@ -150,7 +157,8 @@ async def read_root(
 
 # todo詳細表示
 @router.get("/api/todo/{todo_id}", response_class=HTMLResponse)
-async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
+async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    print(f"現在TODOの詳細を表示しようとしているのは: {current_user} さんです")
     todo_data = crud.get_todo_by_id(db, todo_id=todo_id)
     
     #todoデータが存在しない場合のエラーハンドリング
@@ -175,6 +183,11 @@ def get_csrf_config():
 # todo作成フォーム表示用
 @router.get("/todo/create")
 async def show_todo_form(request: Request, db: Session = Depends(get_db)):
+    # ユーザー名を取得
+    username = request.cookies.get("username")
+    if not username:
+        # ログインしてなければ、即座にログイン画面へ
+        return RedirectResponse(url="/login", status_code=303)
     tags = db.query(models.Tag).order_by(models.Tag.title).all()
     return templates.TemplateResponse(
         request=request, name="todo_create.html", context={"tags": tags},
@@ -192,7 +205,7 @@ async def post_todo_create(
     db: Session = Depends(get_db),
     tag_ids: list[int] = Form(default=[]),
 ):
-    
+
     #期限が過去の日付のときのエラー文
     if due_date < datetime.now():
         logger.warning(f"【期限エラー】過去の日付が入力されました: {due_date}")
@@ -270,8 +283,8 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
     
     return templates.TemplateResponse(
         request=request, 
-        name="todo_update.html",  # 👈 フォルダ分けのルールに合わせて調整してください
-        context={"request": request, "todo": todo, "tags": tags} # 👈 todo も一緒に画面に送る！
+        name="todo_update.html",  
+        context={"request": request, "todo": todo, "tags": tags} 
     )
 
 
