@@ -40,3 +40,10 @@ class TodoTag(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     todo_id: Mapped[int] = mapped_column(ForeignKey("todo.id"), index=True)
     tag_id: Mapped[int] = mapped_column(ForeignKey("tag.id"), index=True)
+
+class User(Base):
+    __tablename__ = "user"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), index=True, nullable=False,unique=True)
+    hashed_password: Mapped[str] = mapped_column(Text, nullable=False)
