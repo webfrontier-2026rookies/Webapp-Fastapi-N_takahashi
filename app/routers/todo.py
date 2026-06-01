@@ -23,7 +23,6 @@ from slowapi.errors import RateLimitExceeded
 from app.database import engine
 import shutil
 from app.schemas import TodoWithTagUpdate
-from app.routers.account import get_current_user
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -157,8 +156,7 @@ async def read_root(
 
 # todo詳細表示
 @router.get("/api/todo/{todo_id}", response_class=HTMLResponse)
-async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
-    print(f"現在TODOの詳細を表示しようとしているのは: {current_user} さんです")
+async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
     todo_data = crud.get_todo_by_id(db, todo_id=todo_id)
     
     #todoデータが存在しない場合のエラーハンドリング
