@@ -73,4 +73,10 @@ def login_button_clicked(request: Request, db: Session = Depends(get_db), userna
     response.set_cookie(key="username", value=username, httponly=True)
 
     return response
-    
+
+#ログアウト機能
+@router.post("/account/logout")
+def logout():
+    response = RedirectResponse(url="/login", status_code=303)
+    response.delete_cookie(key="username")
+    return response
