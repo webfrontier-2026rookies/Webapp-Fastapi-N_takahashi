@@ -86,10 +86,10 @@ def delete_tag(db: Session, tag_id: int) -> Tag | None:
         db.commit()
     return db_tag
 
-def create_todo_with_tags(db: Session, todo_data: TodoCreate, tag_ids: list[int]) -> Todo:
+def create_todo_with_tags(db: Session, todo_data: TodoCreate, tag_ids: list[int], username: str) -> Todo:
     """Todo 本体と中間テーブル経由のタグ紐付けを同時に作成する"""
     todo_link = str(todo_data.link) if todo_data.link else None
-    db_todo = Todo(title=todo_data.title, description=todo_data.description, due_date=todo_data.due_date, status=todo_data.status, link=todo_link, memo=todo_data.memo)
+    db_todo = Todo(title=todo_data.title, description=todo_data.description, due_date=todo_data.due_date, status=todo_data.status, link=todo_link, memo=todo_data.memo, username=username)
     db.add(db_todo)
     db.flush()
     if tag_ids:
