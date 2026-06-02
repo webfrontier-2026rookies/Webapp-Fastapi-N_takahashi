@@ -11,12 +11,7 @@ import logging
 from pydantic import HttpUrl, ValidationError
 from typing import Optional
 from fastapi_csrf_protect import CsrfProtect
-from pydantic_settings import BaseSettings
-import os
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
+from app.schemas import CsrfSettings
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -52,42 +47,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
-ALLOWED_HOSTS = os.getenv("ENVIRONMENT", "development")
-ENV = os.getenv("ENVIRONMENT", "development")
-
-if ENV == "production":
-    app.add_middleware(HTTPSRedirectMiddleware)
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
-)
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
-        response = await call_next(request)
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        if ENV == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "img-src 'self' data:; "
-            "style-src 'self' 'unsafe-inline'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "frame-ancestors 'none'"
-        )
-        return response
-
-app.add_middleware(SecurityHeadersMiddleware)
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates/todo")
 
@@ -114,7 +73,7 @@ async def read_root(
         # ログインしてなければ、即座にログイン画面へ
         return RedirectResponse(url="/login", status_code=303)
     
-    base_query = db.query(models.Todo)
+    base_query = db.query(models.Todo).filter(models.Todo.username == username)
     if completed is not None:
         base_query = base_query.filter(models.Todo.status == completed)
 
@@ -169,11 +128,6 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
         context={"todo": todo_data}
     )
 
-class CsrfSettings(BaseSettings):
-    secret_key: str = os.getenv("CSRF_SECRET")
-    cookie_samesite: str = "lax"
-    cookie_secure: bool = True
-
 @CsrfProtect.load_config
 def get_csrf_config():
     return CsrfSettings()
@@ -194,6 +148,7 @@ async def show_todo_form(request: Request, db: Session = Depends(get_db)):
 # todo作成処理
 @router.post("/api/todo")
 async def post_todo_create(
+    request: Request,
     title: str = Form(...),
     due_date: datetime =  Form(...), 
     description: str = Form(...),
@@ -203,6 +158,9 @@ async def post_todo_create(
     db: Session = Depends(get_db),
     tag_ids: list[int] = Form(default=[]),
 ):
+    username = request.cookies.get("username")
+    if not username:
+        return RedirectResponse(url="/account/login", status_code=303)
 
     #期限が過去の日付のときのエラー文
     if due_date < datetime.now():
@@ -242,7 +200,7 @@ async def post_todo_create(
     
     #todo作成の完了のログ
     logger.info(f"Todoが作成されました。タイトル: {todo_in.title}, 作成日時: {datetime.now()}, 詳細: {todo_in.description}, 期限: {todo_in.due_date}, タグ: {todo_in.tag_ids}, リンク: {todo_in.link}, メモ: {todo_in.memo}")
-    crud.create_todo_with_tags(db=db, todo_data=todo_in, tag_ids=tag_ids)
+    crud.create_todo_with_tags(db=db, todo_data=todo_in, tag_ids=tag_ids, username=username)
     return RedirectResponse(url="/api/todo", status_code=303)
 
 # todoステータス変更処理
