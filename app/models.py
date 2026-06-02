@@ -29,6 +29,7 @@ class Tag(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), index=True)
     description: Mapped[str] = mapped_column(Text)
     usage: Mapped[Optional[str]] = mapped_column(Text, nullable=True, index=True)
+    username: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     
     todos: Mapped[List["Todo"]] = relationship(
         secondary="todo_tag",
