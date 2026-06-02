@@ -2,6 +2,8 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from pydantic import HttpUrl
+from pydantic_settings import BaseSettings
+import os
 
 # データの受け取り用スキーマ
 class TodoBase(BaseModel):
@@ -64,3 +66,9 @@ class TodoWithTagUpdate(BaseModel):
     description: str
     due_date: Optional[datetime] = None
     tag_id: int  
+
+class CsrfSettings(BaseSettings):
+    secret_key: str = os.getenv("CSRF_SECRET")
+    cookie_samesite: str = "lax"
+    cookie_secure: bool = True
+
