@@ -45,11 +45,12 @@ def delete_todo(db: Session, todo_id: int) -> Todo | None:
     return db_todo
 
 # tag作成
-def create_tag(db: Session, tag: TagCreate) -> Tag:
+def create_tag(db: Session, tag: TagCreate, username: str) -> Tag:
     db_tag = Tag(
         title=tag.title,
         description=tag.description,
         usage=tag.usage,
+        username=username
     )
     db.add(db_tag)
     db.commit()

@@ -62,7 +62,7 @@ async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str 
     #tag一覧表示の完了のログ
     logger.info("【アクセス】 タグ一覧ページが表示されました。")
 
-    query = db.query(models.Tag)
+    query = db.query(models.Tag).filter(models.Tag.username == username)
 
     #キーワード検索
     if q:
@@ -135,23 +135,31 @@ async def show_tag_form(request: Request):
 # tag作成処理
 @router.post("/api/tag") 
 async def post_tag_create(
+    request: Request,
     title: str = Form(...),
     description: str = Form(...),
     usage: str = Form(None),
     db: Session = Depends(get_db),
 ):
+    username = request.cookies.get("username")
+    if not username:
+        return RedirectResponse(url="/account/login", status_code=303)
+        
     #必須項目が入力されていないときのエラー文
     if not title or not description:
         logger.error("入力されていない項目があります。") 
-
         raise HTTPException(status_code=400, detail="必須項目が入力されていません")
+        
     tag_in = TagCreate(
         title=title,
         description=description,
-        usage=usage
+        usage=usage,
     )
+    
     logger.info(f"Tagが作成されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
-    crud.create_tag(db=db, tag=tag_in)
+    
+    crud.create_tag(db=db, tag=tag_in, username=username)
+    
     return RedirectResponse(url="/api/tag", status_code=303)
 
 #tag削除処理
