@@ -55,5 +55,5 @@ button:hover {
 
 .login-btn {
   display: block;
-  margin: 0 auto; /* ボタン自体を中央に寄せるおまじない */
+  margin: 0 auto;
 }
