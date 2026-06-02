@@ -19,7 +19,8 @@ class Todo(Base):
     )
     link: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
     memo: Mapped[Optional[str]] = mapped_column(Text, nullable=True) 
-    
+    username: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+
 class Tag(Base):
     __tablename__ = "tag"
 
