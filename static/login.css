@@ -56,5 +56,4 @@ button:hover {
 .login-btn {
   display: block;
   margin: 0 auto; /* ボタン自体を中央に寄せるおまじない */
-  /* もしボタンの横幅が広がりすぎたら、width: 200px; などのように幅を固定してください */
 }
