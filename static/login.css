@@ -5,19 +5,19 @@ h1 {
 
 .register-form {
   max-width: 400px;
-  margin: 0 auto; /* フォーム自体を中央に */
+  margin: 0 auto;
 }
 
 .form-group {
-  display: flex; /* 横並びにする */
-  align-items: center; /* 上下中央をそろえる */
-  margin-bottom: 15px; /* 項目ごとのすきま */
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
 }
 
 .form-group label {
-  width: 100px; /* ラベルの幅を固定！これが重要 */
-  text-align: right; /* 文字を右寄せにするとより綺麗 */
-  margin-right: 15px; /* 入力欄との距離 */
+  width: 100px;
+  text-align: right;
+  margin-right: 15px;
   font-weight: bold;
 }
 
@@ -45,4 +45,16 @@ button {
 
 button:hover {
   background-color: rgb(71, 71, 218);
+}
+
+.register-link {
+  display: block;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.login-btn {
+  display: block;
+  margin: 0 auto; /* ボタン自体を中央に寄せるおまじない */
+  /* もしボタンの横幅が広がりすぎたら、width: 200px; などのように幅を固定してください */
 }

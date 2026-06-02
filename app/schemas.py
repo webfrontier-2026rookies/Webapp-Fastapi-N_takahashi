@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, Union
 from datetime import datetime
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings
@@ -20,7 +20,7 @@ class TodoCreate(TodoBase):
 class TodoUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    due_date: Optional[datetime] = None
+    due_date: Optional[Union[datetime, str]] = None
     status: Optional[bool] = None
     tag_ids: list[int] = []
     link: Optional[HttpUrl] = None

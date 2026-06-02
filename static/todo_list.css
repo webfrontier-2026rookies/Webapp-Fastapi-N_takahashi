@@ -3,12 +3,21 @@ body {
 }
 
 .header {
+  width: 80%;
+  max-width: 600px;
+  margin-left: 830px;
+  text-align: center;
+  padding: 20px;
   display: flex;
+  justify-content: center;
   align-items: center;
   justify-content: flex-start;
-  margin-left: 700px;
 }
 
+.logout-form {
+  margin: 0;
+  padding: 0;
+}
 .fix {
   display: flex;
   justify-content: center;

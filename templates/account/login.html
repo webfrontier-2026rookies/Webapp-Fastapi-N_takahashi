@@ -17,10 +17,15 @@
         <label>パスワード:</label>
         <input type="text" name="hashed_password" required />
       </div>
-      <button action="/account/login" type="submit" class="register-btn">
-        ログイン
-      </button>
-      <a href="/register">アカウント登録画面の方はこちら</a>
+      <div class="link">
+        <form action="/account/login" method="GET" style="display: inline">
+          <button type="submit" class="login-btn">ログイン</button>
+        </form>
+
+        <a href="/register" class="register-link"
+          >アカウント登録画面の方はこちら</a
+        >
+      </div>
     </form>
   </body>
 </html>

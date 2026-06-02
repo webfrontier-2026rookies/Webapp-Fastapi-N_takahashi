@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.schemas import TodoCreate
+from app.schemas import TodoCreate, TodoUpdate
 from app import crud, models
 from datetime import datetime
 import logging
@@ -17,7 +17,6 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.database import engine
 import shutil
-from app.schemas import TodoWithTagUpdate
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -249,17 +248,24 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
 @router.put("/api/todo/{todo_id}")
 async def update_todo_with_tag(
     todo_id: int, 
-    data: TodoWithTagUpdate,  
+    data: TodoUpdate,  
     db: Session = Depends(get_db)
 ):
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not db_todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
+    if data.title is not None:
+        db_todo.title = data.title
+    if data.description is not None:
+        db_todo.description = data.description
+    if data.due_date is not None:
+        db_todo.due_date = data.due_date
+        
+    db_todo.status = data.status if data.status is not None else False
+    db_todo.link = data.link
+    db_todo.memo = data.memo
+    # db_todo.tag_id = data.tag_ids 
     
-    db_todo.title = data.title
-    db_todo.description = data.description
-    db_todo.due_date = data.due_date
-    db_todo.tag_id = data.tag_id 
     db.commit()
     db.refresh(db_todo)
     
