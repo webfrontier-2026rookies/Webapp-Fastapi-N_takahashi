@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Depends, Form
+from fastapi import APIRouter, Request, Depends, Form, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -6,17 +6,10 @@ from app.database import get_db
 from app import models
 from passlib.context import CryptContext
 from fastapi import Cookie
-from typing import Optional
+from app.auth import create_access_token, verify_access_token
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
-
-def get_current_user(username: Optional[str] = Cookie(None)):
-    if not username:
-        return RedirectResponse(
-            url="/account/login",status_code=303)
-    
-    return username
 
 # アカウント登録画面の表示
 @router.get("/register", response_class=HTMLResponse)
@@ -53,6 +46,21 @@ def register_button_clicked(request: Request, db: Session = Depends (get_db), us
 
     return RedirectResponse(url="/login", status_code=303)
 
+def get_current_user(request: Request, db: Session = Depends(get_db), access_token: str = Cookie(None)):
+    if not access_token:
+        return RedirectResponse(url="/login", status_code=303)
+    username= verify_access_token(access_token)
+
+    if not username:
+        return RedirectResponse(url="/register", status_code = 303)
+    
+    user = db.query(models.User).filter(models.User.username == username).first()
+
+    if not user:
+        return RedirectResponse(url="/register", status_code = 303)
+
+    return user
+
 #ログインボタンが押された時の処理
 @router.post("/account/login")
 def login_button_clicked(request: Request, db: Session = Depends(get_db), username: str = Form(...), hashed_password: str = Form(...)):
@@ -70,7 +78,10 @@ def login_button_clicked(request: Request, db: Session = Depends(get_db), userna
 
     response = RedirectResponse(url="/api/todo", status_code=303)
 
-    response.set_cookie(key="username", value=username, httponly=True)
+    access_token = create_access_token(data={"username": username})
+
+    #クッキーに保存
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
 
     return response
 
@@ -78,5 +89,5 @@ def login_button_clicked(request: Request, db: Session = Depends(get_db), userna
 @router.post("/account/logout")
 def logout():
     response = RedirectResponse(url="/login", status_code=303)
-    response.delete_cookie(key="username")
+    response.delete_cookie(key="access_token")
     return response
