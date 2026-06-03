@@ -162,8 +162,6 @@ async def post_tag_create(
     )
     
     logger.info(f"Tagが作成されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
-    
-    # 🎯 crud 側にしっかりデータを引き渡す
     crud.create_tag(db=db, tag=tag_in, username=current_user.username)
     
     return RedirectResponse(url="/api/tag", status_code=303)
