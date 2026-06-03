@@ -14,6 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from app.database import engine
 import shutil
 from app.schemas import TagUpdate
+from app.routers.account import get_current_user
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -53,34 +54,36 @@ def on_startup():
 router = APIRouter()
 
 @router.get("/api/tag", response_class=HTMLResponse)
-async def get_tag_list(request: Request, skip: int = 0, limit: int = 10, q: str = None, db: Session = Depends(get_db)):
-    # ユーザー名を取得
-    username = request.cookies.get("username")
-    if not username:
-        # ログインしてなければ、即座にログイン画面へ
-        return RedirectResponse(url="/login", status_code=303)
-    #tag一覧表示の完了のログ
-    logger.info("【アクセス】 タグ一覧ページが表示されました。")
+async def get_tag_list(
+    request: Request, 
+    skip: int = 0, 
+    limit: int = 10, 
+    q: str = None, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(get_current_user)
+):
 
-    query = db.query(models.Tag).filter(models.Tag.username == username)
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+    
+    query = db.query(models.Tag).filter(models.Tag.username == current_user.username)
 
-    #キーワード検索
     if q:
         search_param = f"%{q}%"
         query = query.filter(
             (models.Tag.title.ilike(search_param)) | (models.Tag.description.ilike(search_param))
         )
+        logger.info(f"【タグ検索成功】キーワード '{q}' でタグの検索が成功しました。")
+    else:
+        logger.info("【アクセス】 タグ一覧ページが表示されました。")
 
-    #検索成功のログ
-    logger.info(f"【タグ検索成功】キーワード '{q}' でタグの検索が成功しました。")
-
-    
-    #作成日時の昇順で並び替え
     query = query.order_by(models.Tag.created_at.asc())
 
     total_count = query.count()
 
-    tag_list = query.offset(skip).limit(limit).all()
+    query = query.offset(skip).limit(limit)
+
+    tag_list = query.all()
         
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
     current_page = (skip // limit) + 1
@@ -121,12 +124,10 @@ async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(ge
 
 # tag作成フォーム表示用
 @router.get("/tag/create", response_class=HTMLResponse)
-async def show_tag_form(request: Request):
-    # ユーザー名を取得
-    username = request.cookies.get("username")
-    if not username:
-        # ログインしてなければ、即座にログイン画面へ
-        return RedirectResponse(url="/login", status_code=303)
+async def show_tag_form(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+    
     return templates.TemplateResponse(
         request=request,
         name="tag_create.html"
@@ -140,10 +141,8 @@ async def post_tag_create(
     description: str = Form(...),
     usage: str = Form(None),
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
-    username = request.cookies.get("username")
-    if not username:
-        return RedirectResponse(url="/account/login", status_code=303)
         
     #必須項目が入力されていないときのエラー文
     if not title or not description:
@@ -158,7 +157,7 @@ async def post_tag_create(
     
     logger.info(f"Tagが作成されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
     
-    crud.create_tag(db=db, tag=tag_in, username=username)
+    crud.create_tag(db=db, tag=tag_in, username=current_user.username)
     
     return RedirectResponse(url="/api/tag", status_code=303)
 
