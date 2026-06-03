@@ -18,6 +18,7 @@ from slowapi.errors import RateLimitExceeded
 from app.database import engine
 import shutil
 from app.schemas import TodoWithTagUpdate
+from app.routers.account import get_current_user
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -66,31 +67,32 @@ async def read_root(
     completed: bool | None = None,
     q: str | None = None,
     db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
-    # ユーザー名を取得
-    username = request.cookies.get("username")
-    if not username:
-        # ログインしてなければ、即座にログイン画面へ
-        return RedirectResponse(url="/login", status_code=303)
+    if isinstance(current_user, RedirectResponse):
+        return current_user
     
-    base_query = db.query(models.Todo).filter(models.Todo.username == username)
-    if completed is not None:
-        base_query = base_query.filter(models.Todo.status == completed)
+    query = db.query(models.Todo).filter(models.Todo.username == current_user.username)
 
-    # キーワード検索の処理
+    if completed is not None:
+        query = query.filter(models.Todo.status == completed)
+
     if q:
         safe_q = escape_like(q)
         search_param = f"%{safe_q}%"
-        base_query = base_query.filter(
+        query = query.filter(
             models.Todo.title.ilike(search_param, escape="\\") |
             models.Todo.description.ilike(search_param, escape="\\")
         )
-    base_query = base_query.order_by(models.Todo.created_at.asc())
 
-    total_count = base_query.count()
-    todo_list = base_query.offset(skip).limit(limit).all()
+    query = query.order_by(models.Todo.created_at.asc())
 
-    # 完了と未完了のtodoを分ける
+    total_count = query.count()
+
+    query = query.offset(skip).limit(limit)
+
+    todo_list = query.all()
+
     active_todos = [t for t in todo_list if not t.status]
     completed_todos = [t for t in todo_list if t.status]
 
@@ -115,13 +117,19 @@ async def read_root(
 
 # todo詳細表示
 @router.get("/api/todo/{todo_id}", response_class=HTMLResponse)
-async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db)):
-    todo_data = crud.get_todo_by_id(db, todo_id=todo_id)
+async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+    
+    todo_data = db.query(models.Todo).filter(
+        models.Todo.id == todo_id,
+        models.Todo.username == current_user.username).first()
     
     #todoデータが存在しない場合のエラーハンドリング
     if todo_data is None:
-        logger.error(f"【Todoデータエラー】ID {todo_id} のTodoデータが見つかりませんでした。")
+        logger.error(f"【Todoデータエラー】ID {todo_id} のTodoデータが見つからないか、アクセス権がありません。")
         raise HTTPException(status_code=404, detail="Todoデータは存在しません")
+    
     return templates.TemplateResponse(
         request=request,
         name="todo_detail.html",
@@ -134,12 +142,7 @@ def get_csrf_config():
 
 # todo作成フォーム表示用
 @router.get("/todo/create")
-async def show_todo_form(request: Request, db: Session = Depends(get_db)):
-    # ユーザー名を取得
-    username = request.cookies.get("username")
-    if not username:
-        # ログインしてなければ、即座にログイン画面へ
-        return RedirectResponse(url="/login", status_code=303)
+async def show_todo_form(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     tags = db.query(models.Tag).order_by(models.Tag.title).all()
     return templates.TemplateResponse(
         request=request, name="todo_create.html", context={"tags": tags},
@@ -157,10 +160,10 @@ async def post_todo_create(
     memo: str = Form(None),
     db: Session = Depends(get_db),
     tag_ids: list[int] = Form(default=[]),
+    current_user: models.User = Depends(get_current_user)
 ):
-    username = request.cookies.get("username")
-    if not username:
-        return RedirectResponse(url="/account/login", status_code=303)
+    if isinstance(current_user, RedirectResponse):
+        return current_user
 
     #期限が過去の日付のときのエラー文
     if due_date < datetime.now():
@@ -200,7 +203,7 @@ async def post_todo_create(
     
     #todo作成の完了のログ
     logger.info(f"Todoが作成されました。タイトル: {todo_in.title}, 作成日時: {datetime.now()}, 詳細: {todo_in.description}, 期限: {todo_in.due_date}, タグ: {todo_in.tag_ids}, リンク: {todo_in.link}, メモ: {todo_in.memo}")
-    crud.create_todo_with_tags(db=db, todo_data=todo_in, tag_ids=tag_ids, username=username)
+    crud.create_todo_with_tags(db=db, todo_data=todo_in, tag_ids=tag_ids, username=current_user.username)
     return RedirectResponse(url="/api/todo", status_code=303)
 
 # todoステータス変更処理
