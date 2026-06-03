@@ -53,6 +53,7 @@ def on_startup():
 
 router = APIRouter()
 
+#tag一覧表示
 @router.get("/api/tag", response_class=HTMLResponse)
 async def get_tag_list(
     request: Request, 
@@ -104,17 +105,19 @@ async def get_tag_list(
 
 # tag詳細表示
 @router.get("/api/tag/{tag_id}", response_class=HTMLResponse)
-async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db)):
-
-    #tag詳細表示の完了のログ
-    logger.info(f"【アクセス】タグ詳細ページ(ID: {tag_id})が表示されました。")
-
-    tag_data = crud.get_tag_by_id(db, tag_id)
+async def get_tag_detail(request: Request, tag_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
     
+    tag_data = db.query(models.Tag).filter(models.Tag.id == tag_id, models.Tag.username == current_user.username).first()
+    #tag詳細表示の完了のログ
+
     #tagデータが存在しない場合のエラーハンドリング
     if tag_data is None:
         logger.error(f"【Tagデータエラー】ID {tag_id} のTagデータが見つかりませんでした。")
         raise HTTPException(status_code=404, detail="Tagデータは存在しません")
+    
+    logger.info(f"【アクセス】タグ詳細ページ(ID: {tag_id})が表示されました。")
         
     return templates.TemplateResponse(
         request=request,
@@ -133,7 +136,7 @@ async def show_tag_form(request: Request, db: Session = Depends(get_db), current
         name="tag_create.html"
     )
 
-# tag作成処理
+#tag作成処理
 @router.post("/api/tag") 
 async def post_tag_create(
     request: Request,
@@ -143,8 +146,10 @@ async def post_tag_create(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
         
-    #必須項目が入力されていないときのエラー文
+    # 必須項目が入力されていないときのエラー文
     if not title or not description:
         logger.error("入力されていない項目があります。") 
         raise HTTPException(status_code=400, detail="必須項目が入力されていません")
@@ -153,10 +158,12 @@ async def post_tag_create(
         title=title,
         description=description,
         usage=usage,
+        username=current_user.username
     )
     
     logger.info(f"Tagが作成されました。タイトル: {tag_in.title}, 作成日時: {datetime.now()}, 詳細: {tag_in.description}, 使用方法: {tag_in.usage}")
     
+    # 🎯 crud 側にしっかりデータを引き渡す
     crud.create_tag(db=db, tag=tag_in, username=current_user.username)
     
     return RedirectResponse(url="/api/tag", status_code=303)
