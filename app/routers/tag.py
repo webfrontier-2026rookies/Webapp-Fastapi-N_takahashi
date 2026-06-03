@@ -66,33 +66,25 @@ async def get_tag_list(
     if isinstance(current_user, RedirectResponse):
         return current_user
     
-    # 🧪 1. クエリの土台を作る（JWTで識別した自分のタグだけ）
     query = db.query(models.Tag).filter(models.Tag.username == current_user.username)
 
-    # 🧪 2. キーワード検索があれば合体
     if q:
         search_param = f"%{q}%"
         query = query.filter(
             (models.Tag.title.ilike(search_param)) | (models.Tag.description.ilike(search_param))
         )
-        # 📝 検索が完了したこのタイミングでログを出すのが自然です！
         logger.info(f"【タグ検索成功】キーワード '{q}' でタグの検索が成功しました。")
     else:
         logger.info("【アクセス】 タグ一覧ページが表示されました。")
 
-    # 🧪 3. 作成日時の昇順で並び替え
     query = query.order_by(models.Tag.created_at.asc())
 
-    # 📊 4. 【大修正：順番入れ替え】ページ制限をかける前に、条件に合う「全体の件数」を先に数える！
     total_count = query.count()
 
-    # 📄 5. 【ページ制限】全件数を数え終わったので、安心してスキップと取得件数の命令を合体させる
     query = query.offset(skip).limit(limit)
 
-    # 🎯 6. 【最後の仕上げ】満を持して .all() で引き抜く！
     tag_list = query.all()
         
-    # ページ数の計算（全件数が正しく取れているので、ここも完璧に計算されます）
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
     current_page = (skip // limit) + 1
     
