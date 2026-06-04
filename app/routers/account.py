@@ -9,6 +9,7 @@ from app.auth import create_access_token, verify_access_token
 from app.schemas import verify_csrf_token
 import secrets
 from app.database import limiter
+import os
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -98,9 +99,11 @@ def login_button_clicked(
     access_token = create_access_token(data={"username": username})
     current_csrf_token = request.cookies.get("csrf_token")
 
+    ENV = os.getenv("ENVIRONMENT", "development")
+
     # クッキーに保存
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
-    response.set_cookie(key="csrf_token", value=current_csrf_token, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=(ENV=="production"), max_age=3600)
+    response.set_cookie(key="csrf_token", value=current_csrf_token, httponly=False)
 
     #if current_csrf_token:
     return response
