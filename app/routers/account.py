@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from app.auth import create_access_token, verify_access_token
 from app.schemas import verify_csrf_token
 import secrets
+from app.database import limiter
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -58,6 +59,7 @@ def register_button_clicked(
 # ----------------------------------------------------
 # 📄 3. ログイン画面の表示 (GET)
 # ----------------------------------------------------
+@limiter.limit("5/minute")
 @router.get("/login", response_class=HTMLResponse)
 def get_login_page(request: Request):
     csrf_token = secrets.token_urlsafe(32)
