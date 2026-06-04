@@ -72,18 +72,13 @@ app.add_middleware(SecurityHeadersMiddleware)
 # ----------------------------------------------------
 # 🔗 4. 各ルーターをアプリに合体（登録順序を最適化！）
 # ----------------------------------------------------
-app.include_router(account.router)  # ログイン関連を最優先に
+app.include_router(account.router) 
 app.include_router(todo.router)
 app.include_router(tag.router)
 
 # ----------------------------------------------------
 # ⚙️ 5. 各種共通エンドポイント
 # ----------------------------------------------------
-# 💡 URLの衝突を防ぐため、生存確認用URLを /api/health に変更しました！
-@app.get("/api/health")
-def health_check():
-    return {"status": "running", "message": "FastAPIアプリは正常に起動しています"}
-
 @app.exception_handler(CsrfProtectError)
 async def csrf_handler(request: Request, exc: CsrfProtectError):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
@@ -96,6 +91,6 @@ def init_session(response: Response):
         value=csrf_token,
         httponly=False,
         samesite="lax",
-        path="/" # 👈 Cookieの有効範囲を全体に広げてすれ違いを防止！
+        path="/" 
     )
     return {"status": "session_initialized"}
