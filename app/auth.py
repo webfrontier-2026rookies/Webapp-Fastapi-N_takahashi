@@ -9,11 +9,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 #JWTの作成
-def create_access_token(data: dict, expires_delta: timedelta):
+def create_access_token(data: dict, expires_delta: timedelta = None):
     #元のデータを傷つけないためコピー
     copy_data = data.copy()
+
+    if expires_delta is None:
+       expires_delta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     copy_data["exp"] = expire
+
     return jwt.encode(copy_data, SECRET_KEY, algorithm=ALGORITHM)
 
 #JWTの検証

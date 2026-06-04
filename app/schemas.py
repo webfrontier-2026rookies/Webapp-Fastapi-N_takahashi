@@ -31,7 +31,7 @@ class TodoUpdate(BaseModel):
 class Todo(TodoBase):
     id: int
     created_at: datetime
-    due_date: datetime
+    due_date: Optional[datetime]
     status: bool
     tag_ids: list[int] = []
     link: Optional[HttpUrl] = None
@@ -66,7 +66,11 @@ class TodoWithTagUpdate(BaseModel):
     title: str
     description: str
     due_date: Optional[datetime] = None
-    tag_id: int  
+    tag_id: Optional[int] = None
+    due_date: Optional[str] = None   
+    status: Optional[str] = None   
+    link: Optional[str] = None   
+    memo: Optional[str] = None
 
 async def verify_csrf_token(request: Request):
     # 1. Cookie からトークンを取得
