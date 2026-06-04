@@ -74,7 +74,6 @@ def get_login_page(request: Request):
 # ----------------------------------------------------
 # 🛡️ 4. ログインボタンが押された時の処理 (POST)
 # ----------------------------------------------------
-# 💡 こちらもデコレータ側に移動して、認証前の悪意あるアクセスをブロック！
 @router.post("/account/login", dependencies=[Depends(verify_csrf_token)])
 def login_button_clicked(
     request: Request, 

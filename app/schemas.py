@@ -72,7 +72,7 @@ async def verify_csrf_token(request: Request):
     # 1. Cookie からトークンを取得
     cookie_token = request.cookies.get("csrf_token")
     
-    # 2. フォームデータを非同期で解析して取得する（これが抜けていました！）
+    # 2. フォームデータを非同期で解析して取得
     form_data = await request.form()
     
     # 3. リクエストヘッダー、またはフォームデータ（HTMLのinput）からトークンを取得
