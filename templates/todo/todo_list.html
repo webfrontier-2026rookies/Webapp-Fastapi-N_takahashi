@@ -13,6 +13,7 @@
     <div class="header">
       <h1>Todo一覧</h1>
       <form action="/account/logout" method="POST">
+        <input type="hidden" name="X-CSRF-Token" value="{{ csrf_token }}" />
         <button type="submit">ログアウト</button>
       </form>
     </div>
