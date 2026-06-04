@@ -1,24 +1,28 @@
 from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
 from app import models
 import os
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from app.routers import account, todo, tag # インポートをスッキリ1箇所に統合
+from app.routers import account, todo, tag 
 import secrets
 from contextlib import asynccontextmanager
+# main.py
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.database import  limiter
+
+
+
 
 # ----------------------------------------------------
 # 🛡️ 1. 起動時に「1回だけ」安全に実行されるエリアを定義
 # ----------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ワーカーが何人同時に立ち上がろうが、ここなら100%安全に1回だけテーブルが作られます！
     models.Base.metadata.create_all(bind=engine)
     yield
 
@@ -30,24 +34,20 @@ app = FastAPI(lifespan=lifespan)
 # 静的ファイル（CSSなど）の読み込み設定
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # ----------------------------------------------------
 # 🔒 3. セキュリティ・ミドルウェア設定
 # ----------------------------------------------------
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",")
-ALLOWED_HOSTS = os.getenv("ENVIRONMENT", "development")
+ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h]
+ALLOWED_ORIGINS = [o for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o]
 ENV = os.getenv("ENVIRONMENT", "development")
 
 if ENV == "production":
-    app.add_middleware(HTTPSRedirectMiddleware)
+    if not ALLOWED_HOSTS:
+        raise RuntimeError("ALLOWED_HOSTS must be set in production")
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
-)
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
