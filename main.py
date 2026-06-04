@@ -9,16 +9,22 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from app.routers import account, todo, tag # インポートをスッキリ1箇所に統合
+from app.routers import account, todo, tag 
 import secrets
 from contextlib import asynccontextmanager
+# main.py
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.database import  limiter
+
+
+
 
 # ----------------------------------------------------
 # 🛡️ 1. 起動時に「1回だけ」安全に実行されるエリアを定義
 # ----------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ワーカーが何人同時に立ち上がろうが、ここなら100%安全に1回だけテーブルが作られます！
     models.Base.metadata.create_all(bind=engine)
     yield
 
@@ -29,6 +35,9 @@ app = FastAPI(lifespan=lifespan)
 
 # 静的ファイル（CSSなど）の読み込み設定
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ----------------------------------------------------
 # 🔒 3. セキュリティ・ミドルウェア設定
