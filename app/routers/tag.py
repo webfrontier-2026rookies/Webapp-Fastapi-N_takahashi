@@ -35,7 +35,7 @@ def escape_like(value: str) -> str:
 
 limiter = Limiter(key_func=get_remote_address)
 
-models.Base.metadata.create_all(bind=engine)
+# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.state.limiter = limiter
