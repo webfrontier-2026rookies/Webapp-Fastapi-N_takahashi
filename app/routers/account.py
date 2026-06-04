@@ -1,39 +1,47 @@
-from fastapi import APIRouter, Request, Depends, Form, HTTPException
+from fastapi import APIRouter, Request, Depends, Form, Cookie
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models
 from passlib.context import CryptContext
-from fastapi import Cookie
 from app.auth import create_access_token, verify_access_token
+from app.schemas import verify_csrf_token
+import secrets
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-# アカウント登録画面の表示
+# ----------------------------------------------------
+# 📄 1. アカウント登録画面の表示 (GET)
+# ----------------------------------------------------
 @router.get("/register", response_class=HTMLResponse)
 def get_account_register(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="account/register.html"
-    )
+    csrf_token = secrets.token_urlsafe(32)
 
-#ログイン画面の表示
-@router.get("/login", response_class=HTMLResponse)
-def get_login_page(request: Request):
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request,
-        name="account/login.html" 
+        name="account/register.html",
+        context={"csrf_token": csrf_token}
     )
+    
+    response.set_cookie(key="csrf_token", value=csrf_token, httponly=False, samesite="lax", path="/")
+    return response
 
-#登録ボタンが押された時の処理
-@router.post("/account/register", response_class=HTMLResponse)
-def register_button_clicked(request: Request, db: Session = Depends (get_db), username: str = Form(...),  hashed_password: str = Form(...)):
-    #パスワードハッシュ化用のツールを準備
+
+# ----------------------------------------------------
+# 🛡️ 2. 登録ボタンが押された時の処理 (POST)
+# ----------------------------------------------------
+@router.post("/account/register", response_class=HTMLResponse, dependencies=[Depends(verify_csrf_token)])
+def register_button_clicked(
+    request: Request, 
+    db: Session = Depends(get_db), 
+    username: str = Form(...), 
+    hashed_password: str = Form(...)
+):
+    # パスワードハッシュ化用のツールを準備
     pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
-
-    hashed_password = pwd_context.hash( hashed_password)
+    hashed_password = pwd_context.hash(hashed_password)
 
     new_user = models.User(
         username=username,
@@ -46,26 +54,35 @@ def register_button_clicked(request: Request, db: Session = Depends (get_db), us
 
     return RedirectResponse(url="/login", status_code=303)
 
-def get_current_user(request: Request, db: Session = Depends(get_db), access_token: str = Cookie(None)):
-    if not access_token:
-        return RedirectResponse(url="/login", status_code=303)
-    username= verify_access_token(access_token)
 
-    if not username:
-        return RedirectResponse(url="/register", status_code = 303)
-    
-    user = db.query(models.User).filter(models.User.username == username).first()
+# ----------------------------------------------------
+# 📄 3. ログイン画面の表示 (GET)
+# ----------------------------------------------------
+@router.get("/login", response_class=HTMLResponse)
+def get_login_page(request: Request):
+    csrf_token = secrets.token_urlsafe(32)
+    response = templates.TemplateResponse(
+        request=request,
+        name="account/login.html",
+        context={"csrf_token": csrf_token}
+    )
 
-    if not user:
-        return RedirectResponse(url="/register", status_code = 303)
+    response.set_cookie(key="csrf_token", value=csrf_token, httponly=False, samesite="lax", path="/")
+    return response
 
-    return user
 
-#ログインボタンが押された時の処理
-@router.post("/account/login")
-def login_button_clicked(request: Request, db: Session = Depends(get_db), username: str = Form(...), hashed_password: str = Form(...)):
+# ----------------------------------------------------
+# 🛡️ 4. ログインボタンが押された時の処理 (POST)
+# ----------------------------------------------------
+# 💡 こちらもデコレータ側に移動して、認証前の悪意あるアクセスをブロック！
+@router.post("/account/login", dependencies=[Depends(verify_csrf_token)])
+def login_button_clicked(
+    request: Request, 
+    db: Session = Depends(get_db), 
+    username: str = Form(...), 
+    hashed_password: str = Form(...)
+):
     pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
-
     user = db.query(models.User).filter(models.User.username == username).first()
 
     if not user:
@@ -77,17 +94,42 @@ def login_button_clicked(request: Request, db: Session = Depends(get_db), userna
         return {"error": "ユーザー名、またはパスワードが違います"}
 
     response = RedirectResponse(url="/api/todo", status_code=303)
-
     access_token = create_access_token(data={"username": username})
+    current_csrf_token = request.cookies.get("csrf_token")
 
-    #クッキーに保存
+    # クッキーに保存
     response.set_cookie(key="access_token", value=access_token, httponly=True)
+    response.set_cookie(key="csrf_token", value=current_csrf_token, httponly=True)
 
+    #if current_csrf_token:
     return response
 
-#ログアウト機能
-@router.post("/account/logout")
+
+# ----------------------------------------------------
+# 👤 5. ログインユーザー取得用共通関数 (Depends)
+# ----------------------------------------------------
+def get_current_user(request: Request, db: Session = Depends(get_db), access_token: str = Cookie(None)):
+    if not access_token:
+        return RedirectResponse(url="/login", status_code=303)
+    username = verify_access_token(access_token)
+
+    if not username:
+        return RedirectResponse(url="/register", status_code=303)
+    
+    user = db.query(models.User).filter(models.User.username == username).first()
+
+    if not user:
+        return RedirectResponse(url="/register", status_code=303)
+
+    return user
+
+
+# ----------------------------------------------------
+#6. ログアウト機能 (POST)
+# ----------------------------------------------------
+@router.post("/account/logout", dependencies=[Depends(verify_csrf_token)])
 def logout():
-    response = RedirectResponse(url="/login", status_code=303)
-    response.delete_cookie(key="access_token")
+    response = RedirectResponse(url="/account/login", status_code=303)
+    response.delete_cookie(key="access_token", path="/")
+    response.delete_cookie(key="csrf_token", path="/")
     return response

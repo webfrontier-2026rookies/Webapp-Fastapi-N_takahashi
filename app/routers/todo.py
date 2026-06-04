@@ -10,15 +10,13 @@ from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
 from typing import Optional
-from fastapi_csrf_protect import CsrfProtect
-from app.schemas import CsrfSettings
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.database import engine
 import shutil
 from app.schemas import TodoWithTagUpdate
 from app.routers.account import get_current_user
+import secrets
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -38,8 +36,6 @@ def escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 limiter = Limiter(key_func=get_remote_address)
-
-models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.state.limiter = limiter
@@ -67,8 +63,10 @@ async def read_root(
     completed: bool | None = None,
     q: str | None = None,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
+    csrf_token = secrets.token_urlsafe(32)
+
     if isinstance(current_user, RedirectResponse):
         return current_user
     
@@ -99,10 +97,11 @@ async def read_root(
     total_pages = (total_count + limit - 1) // limit if total_count > 0 else 1
     current_page = (skip // limit) + 1
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request=request,
         name="todo_list.html",
         context={
+            "request": request,
             "todo_list": todo_list,
             "active_todos": active_todos,
             "completed_todos": completed_todos,
@@ -112,8 +111,16 @@ async def read_root(
             "current_limit": limit,
             "current_skip": skip,
             "search_param": q or "",
+            "csrf_token": csrf_token,
         },
     )
+
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        path="/"
+    )
+    return response
 
 # todo詳細表示
 @router.get("/api/todo/{todo_id}", response_class=HTMLResponse)
@@ -135,10 +142,6 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
         name="todo_detail.html",
         context={"todo": todo_data}
     )
-
-@CsrfProtect.load_config
-def get_csrf_config():
-    return CsrfSettings()
 
 # todo作成フォーム表示用
 @router.get("/todo/create")

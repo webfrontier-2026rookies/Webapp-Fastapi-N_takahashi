@@ -2,8 +2,9 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 from pydantic import HttpUrl
-from pydantic_settings import BaseSettings
-import os
+import secrets
+from fastapi import HTTPException, Request, status
+
 
 # データの受け取り用スキーマ
 class TodoBase(BaseModel):
@@ -67,8 +68,28 @@ class TodoWithTagUpdate(BaseModel):
     due_date: Optional[datetime] = None
     tag_id: int  
 
-class CsrfSettings(BaseSettings):
-    secret_key: str = os.getenv("CSRF_SECRET")
-    cookie_samesite: str = "lax"
-    cookie_secure: bool = True
-
+async def verify_csrf_token(request: Request):
+    # 1. Cookie からトークンを取得
+    cookie_token = request.cookies.get("csrf_token")
+    
+    # 2. フォームデータを非同期で解析して取得する（これが抜けていました！）
+    form_data = await request.form()
+    
+    # 3. リクエストヘッダー、またはフォームデータ（HTMLのinput）からトークンを取得
+    header_token = request.headers.get("X-CSRF-Token") or form_data.get("X-CSRF-Token")
+    
+    # 4. どちらかが欠けていたら即座にアウト
+    if not cookie_token or not header_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRFトークンが見つかりません。"
+        )
+    
+    # 5. secrets.compare_digest で安全に検証
+    if not secrets.compare_digest(cookie_token, header_token):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="CSRFトークンが不正です。"
+        )
+        
+    return True

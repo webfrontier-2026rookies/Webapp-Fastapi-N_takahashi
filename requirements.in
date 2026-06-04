@@ -9,8 +9,6 @@ uvicorn
 gunicorn
 passlib[bcrypt]
 pyjwt
-python-multipart
-fastapi-csrf-protect
 slowapi
 pyjwt[crypto]
 python-jose[cryptography]
