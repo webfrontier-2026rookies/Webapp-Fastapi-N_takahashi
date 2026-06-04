@@ -66,7 +66,7 @@ class TodoWithTagUpdate(BaseModel):
     title: str
     description: str
     due_date: Optional[datetime] = None
-    tag_id: int  
+    tag_ids: list[int] = []
 
 async def verify_csrf_token(request: Request):
     # 1. Cookie からトークンを取得
