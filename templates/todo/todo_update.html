@@ -29,11 +29,16 @@
       </div>
       <div class="form-group">
         <label>期限:</label>
-        <input type="datetime-local" name="due_date" required />
+        <input
+          id="todoDue_date"
+          type="datetime-local"
+          name="due_date"
+          required
+        />
       </div>
       <div class="form-group">
         <label>ステータス:</label>
-        <select name="status" required>
+        <select id="todoStatus" name="status" required>
           <option value="false">未完了</option>
           <option value="true">完了</option>
         </select>
@@ -48,11 +53,11 @@
       </div>
       <div class="form-group">
         <label>リンク:</label>
-        <input type="url" name="link" />
+        <input id="todoUrl" type="url" name="link" />
       </div>
       <div class="form-group">
         <label>メモ:</label>
-        <input type="text" name="memo" />
+        <input id="todoMemo" type="text" name="memo" />
       </div>
 
       <button type="button" onclick="executePutUpdate('{{ todo.id }}')">
@@ -65,7 +70,11 @@
         const currentTitle = document.getElementById("todoTitle").value;
         const currentDescription =
           document.getElementById("todoDescription").value;
+        const currentDue_date = document.getElementById("todoDue_date").value;
+        const currrentStatus = document.getElementById("todoStatus").value;
         const currentTagId = document.getElementById("todoTagId").value;
+        const currentUrl = document.getElementById("todoUrl").value;
+        const currentMemo = document.getElementById("todoMemo").value;
 
         const response = await fetch(`/api/todo/${todo_id}`, {
           method: "PUT",
@@ -75,8 +84,11 @@
           body: JSON.stringify({
             title: currentTitle,
             description: currentDescription,
-            tag_id: parseInt(currentTagId),
             tag_id: currentTagId ? parseInt(currentTagId) : null,
+            due_date: currentDue_date,
+            status: currrentStatus,
+            link: currentUrl,
+            memo: currentMemo,
           }),
         });
 
