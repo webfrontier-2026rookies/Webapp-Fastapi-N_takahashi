@@ -10,9 +10,6 @@ from datetime import datetime
 import logging
 from pydantic import HttpUrl, ValidationError
 from typing import Optional
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
 import shutil
 from app.schemas import TodoWithTagUpdate
 from app.routers.account import get_current_user
@@ -35,11 +32,7 @@ def get_real_ip(request: Request) -> str:
 def escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
-limiter = Limiter(key_func=get_remote_address)
-
 app = FastAPI()
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -54,7 +47,6 @@ def on_startup():
 router = APIRouter()
 
 # todo一覧表示
-@limiter.limit("60/minute")
 @router.get("/api/todo", response_class=HTMLResponse)
 async def read_root(
     request: Request,
@@ -258,6 +250,7 @@ async def update_todo_with_tag(
     db: Session = Depends(get_db)
 ):
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    tags = db.query(models.Tag).filter(models.Tag.id.in_(data.tag_ids)).all()
     if not db_todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
     

@@ -2,21 +2,6 @@ from sqlalchemy.orm import Session
 from app.models import Todo, Tag
 from app.schemas import TodoCreate, TodoUpdate, TagCreate, TagUpdate
 
-def create_todo(db: Session, todo: TodoCreate) -> Todo:
-    db_todo = Todo(
-        title=todo.title,
-        description=todo.description,
-        due_date=todo.due_date,
-        status=todo.status,
-        tag=todo.tag,
-        link=todo.link,
-        memo=todo.memo,
-    )
-    db.add(db_todo)
-    db.commit()
-    db.refresh(db_todo)
-    return db_todo
-
 def get_todo(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Todo).offset(skip).limit(limit).all()
 

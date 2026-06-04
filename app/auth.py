@@ -6,7 +6,7 @@ SECRET_KEY = os.getenv("SECRET_KEY_JWT")
 
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 #JWTの作成
 def create_access_token(data: dict, expires_delta: timedelta = None):
