@@ -243,7 +243,6 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
 
 
 #todo更新処理
-
 @router.put("/api/todo/{todo_id}")
 async def update_todo_with_tag(
     todo_id: int, 
@@ -255,11 +254,25 @@ async def update_todo_with_tag(
     if not db_todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
     
+    tags = []
+    if data.tag_id:
+        tag = db.query(models.Tag).filter(models.Tag.id == data.tag_id).first()
+        if tag:
+            tags.append(tag)
+    
     db_todo.title = data.title
     db_todo.description = data.description
     db_todo.due_date = data.due_date
     db_todo.tags = tags
+    db_todo.link = data.link
+    db_todo.memo = data.memo
+
+    if isinstance(data.status, str):
+        db_todo.status = (data.status.lower() == 'true')
+    else:
+        db_todo.status = bool(data.status)
+
     db.commit()
     db.refresh(db_todo)
     
-    return {"status": "success", "message": "TODOとタグの更新が完了しました"}
+    return {"status": "success", "message": "更新が完了しました"}

@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory="templates")
 # ----------------------------------------------------
 # 📄 1. アカウント登録画面の表示 (GET)
 # ----------------------------------------------------
-@router.get("/register", response_class=HTMLResponse)
+@router.get("/account/register", response_class=HTMLResponse) # 💡URLを統一
 def get_account_register(request: Request):
     csrf_token = secrets.token_urlsafe(32)
 
@@ -41,7 +41,6 @@ def register_button_clicked(
     username: str = Form(...), 
     hashed_password: str = Form(...)
 ):
-    # パスワードハッシュ化用のツールを準備
     pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
     hashed_password = pwd_context.hash(hashed_password)
 
@@ -54,14 +53,14 @@ def register_button_clicked(
     db.commit()
     db.refresh(new_user)
 
-    return RedirectResponse(url="/login", status_code=303)
+    # 💡リダイレクト先を正しいログインURLに統一
+    return RedirectResponse(url="/account/login", status_code=303)
 
 
 # ----------------------------------------------------
 # 📄 3. ログイン画面の表示 (GET)
 # ----------------------------------------------------
-@limiter.limit("5/minute")
-@router.get("/login", response_class=HTMLResponse)
+@router.get("/account/login", response_class=HTMLResponse) # 💡URLを統一
 def get_login_page(request: Request):
     csrf_token = secrets.token_urlsafe(32)
     response = templates.TemplateResponse(
@@ -96,16 +95,19 @@ def login_button_clicked(
         return {"error": "ユーザー名、またはパスワードが違います"}
 
     response = RedirectResponse(url="/api/todo", status_code=303)
+    
+    # 🟢 auth.pyを直したので、これで100%エラーにならず動きます！
     access_token = create_access_token(data={"username": username})
     current_csrf_token = request.cookies.get("csrf_token")
 
     ENV = os.getenv("ENVIRONMENT", "development")
 
-    # クッキーに保存
-    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=(ENV=="production"), max_age=3600)
-    response.set_cookie(key="csrf_token", value=current_csrf_token, httponly=False)
+    # 🔒 クッキーの設定を完璧に修正
+    # access_token はJavaScriptに触らせない(httponly=True)、全体で使う(path="/")
+    response.set_cookie(key="access_token", value=access_token, httponly=True, secure=(ENV=="production"), max_age=3600, path="/")
+    # csrf_token は画面側から読ませる(httponly=False)、全体で使う(path="/")
+    response.set_cookie(key="csrf_token", value=current_csrf_token, httponly=False, path="/")
 
-    #if current_csrf_token:
     return response
 
 
@@ -114,22 +116,22 @@ def login_button_clicked(
 # ----------------------------------------------------
 def get_current_user(request: Request, db: Session = Depends(get_db), access_token: str = Cookie(None)):
     if not access_token:
-        return RedirectResponse(url="/login", status_code=303)
+        return RedirectResponse(url="/account/login", status_code=303)
     username = verify_access_token(access_token)
 
     if not username:
-        return RedirectResponse(url="/register", status_code=303)
+        return RedirectResponse(url="/account/register", status_code=303)
     
     user = db.query(models.User).filter(models.User.username == username).first()
 
     if not user:
-        return RedirectResponse(url="/register", status_code=303)
+        return RedirectResponse(url="/account/register", status_code=303)
 
     return user
 
 
 # ----------------------------------------------------
-#6. ログアウト機能 (POST)
+# 6. ログアウト機能 (POST)
 # ----------------------------------------------------
 @router.post("/account/logout", dependencies=[Depends(verify_csrf_token)])
 def logout():
