@@ -1,4 +1,4 @@
-from jose import jwt
+import jwt
 import os
 from datetime import datetime, timedelta, timezone
 

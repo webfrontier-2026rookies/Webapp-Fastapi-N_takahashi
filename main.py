@@ -4,7 +4,6 @@ from app import models
 import os
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi_csrf_protect.exceptions import CsrfProtectError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from app.routers import account, todo, tag 
@@ -24,8 +23,6 @@ ALLOWED_ORIGINS = [o for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o]
 # ----------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if ENV == "development":
-        models.Base.metadata.create_all(bind=engine)
     yield
 # ----------------------------------------------------
 # 🚀 2. FastAPI本体の起動（lifespanをここで1回だけ渡す！）
@@ -74,9 +71,6 @@ app.include_router(tag.router)
 # ----------------------------------------------------
 # ⚙️ 5. 各種共通エンドポイント
 # ----------------------------------------------------
-@app.exception_handler(CsrfProtectError)
-async def csrf_handler(request: Request, exc: CsrfProtectError):
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 @app.get("/api/init-session")
 def init_session(response: Response):
