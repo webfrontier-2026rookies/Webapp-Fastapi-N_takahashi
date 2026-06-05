@@ -250,7 +250,7 @@ async def update_todo_with_tag(
     db: Session = Depends(get_db)
 ):
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
-    tags = db.query(models.Tag).filter(models.Tag.id.in_(data.tag_ids)).all()
+    tags = db.query(models.Tag).filter(models.Tag.id.in_(data.tag_id)).all()
     if not db_todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
     

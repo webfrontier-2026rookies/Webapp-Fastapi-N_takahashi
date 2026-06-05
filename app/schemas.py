@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import HttpUrl
 import secrets
 from fastapi import HTTPException, Request, status
+from typing import List
 
 
 # データの受け取り用スキーマ
@@ -66,7 +67,7 @@ class TodoWithTagUpdate(BaseModel):
     title: str
     description: str
     due_date: Optional[datetime] = None
-    tag_id: Optional[int] = None
+    tag_ids: List[int] = None
     due_date: Optional[str] = None   
     status: Optional[str] = None   
     link: Optional[str] = None   
