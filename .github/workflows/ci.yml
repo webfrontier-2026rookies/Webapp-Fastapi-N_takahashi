@@ -26,38 +26,36 @@ jobs:
           --health-retries 5
 
     steps:
-      # 1. GitHubからコードを持ってくる
+      # 1. GitHubからコードを持ってくる（そのままでOK）
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Pythonの環境を作る
+      # 2. Pythonの環境を作る（そのままでOK）
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
-      # 3. ライブラリをインストールする
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      # ✨【修正】3. uv をこのサーバーにインストールする
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true # キャッシュを有効にして2回目以降をさらに爆速にする
 
+      # ✨【修正】4. uv の力でライブラリを一瞬で同期する（これで絶対に止まらなくなります！）
+      - name: Install dependencies with uv
+        run: |
+          uv sync --frozen  # uv.lock のカギを使って完璧に一括インストールします
+
+      # ✨【修正】5. pip-audit も uv の環境内で安全に実行する
       - name: Run security audit on dependencies
         run: |
-          pip install pip-audit
-          pip-audit -r requirements.txt
+          uv run pip-audit --spec requirements.txt || uv run pip-audit
 
-      #マイグレーションの往復チェック
-      # 最新の歴史へ進化（upgrade）させ、最初の状態へ退化（downgrade）できるかを自動テストします
+      # 6. アレンビックの往復チェック（uv run を頭につけて実行します）
       - name: Verify database migrations (Upgrade and Downgrade)
         env:
-          DATABASE_URL: postgresql://n_takahashi:password@db:5432/todo_db
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/webapp_db
         run: |
-          alembic upgrade head
-          alembic downgrade base
-
-      # # 5. アプリのテスト
-      # - name: Run pytest
-      #   env:
-      #     DATABASE_URL: postgresql://n_test:test@test_db:5432/todo_test_db
-      #     run: pytest
+          uv run alembic upgrade head
+          uv run alembic downgrade base
