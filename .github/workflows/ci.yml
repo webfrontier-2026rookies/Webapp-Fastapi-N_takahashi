@@ -42,6 +42,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Run security audit on dependencies
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
       #マイグレーションの往復チェック
       # 最新の歴史へ進化（upgrade）させ、最初の状態へ退化（downgrade）できるかを自動テストします
       - name: Verify database migrations (Upgrade and Downgrade)
