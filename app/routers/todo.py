@@ -141,7 +141,9 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
 # todo作成フォーム表示用
 @router.get("/todo/create")
 async def show_todo_form(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
-    tags = db.query(models.Tag).order_by(models.Tag.title).all()
+    tags = (db.query(models.Tag)
+            .filter(models.Tag.username == current_user.username)
+            .all())
     return templates.TemplateResponse(
         request=request, name="todo_create.html", context={"tags": tags},
     )
