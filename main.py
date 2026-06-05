@@ -23,8 +23,6 @@ ALLOWED_ORIGINS = [o for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o]
 # ----------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if ENV == "development":
-        models.Base.metadata.create_all(bind=engine)
     yield
 # ----------------------------------------------------
 # 🚀 2. FastAPI本体の起動（lifespanをここで1回だけ渡す！）
