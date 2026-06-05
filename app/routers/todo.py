@@ -14,6 +14,7 @@ import shutil
 from app.schemas import TodoWithTagUpdate
 from app.routers.account import get_current_user
 import secrets
+from sqlalchemy.orm import selectinload
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -62,7 +63,9 @@ async def read_root(
     if isinstance(current_user, RedirectResponse):
         return current_user
     
-    query = db.query(models.Todo).filter(models.Todo.username == current_user.username)
+    query = (db.query(models.Todo)
+           .options(selectinload(models.Todo.tags))
+           .filter(models.Todo.username == current_user.username))
 
     if completed is not None:
         query = query.filter(models.Todo.status == completed)
