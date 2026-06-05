@@ -26,33 +26,33 @@ jobs:
           --health-retries 5
 
     steps:
-      # 1. GitHubからコードを持ってくる（そのままでOK）
+      # 1. GitHubからコードを持ってくる
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Pythonの環境を作る（そのままでOK）
+      # 2. Pythonの環境を作る
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
-      # ✨【修正】3. uv をこのサーバーにインストールする
+      #3. uv をこのサーバーにインストールする
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true # キャッシュを有効にして2回目以降をさらに爆速にする
 
-      # ✨【修正】4. uv の力でライブラリを一瞬で同期する（これで絶対に止まらなくなります！）
+      # 4. uv の力でライブラリを一瞬で同期する
       - name: Install dependencies with uv
         run: |
           uv sync --frozen  # uv.lock のカギを使って完璧に一括インストールします
 
-      # ✨【修正】5. pip-audit も uv の環境内で安全に実行する
+      #5. pip-audit も uv の環境内で安全に実行する
       - name: Run security audit on dependencies
         run: |
           uv run pip-audit --spec requirements.txt || uv run pip-audit
 
-      # 6. アレンビックの往復チェック（uv run を頭につけて実行します）
+      # 6. アレンビックの往復チェック
       - name: Verify database migrations (Upgrade and Downgrade)
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5432/webapp_db
