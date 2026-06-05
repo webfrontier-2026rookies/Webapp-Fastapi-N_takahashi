@@ -1,10 +1,7 @@
-from fastapi import FastAPI, Request, Response
-from app.database import engine
-from app import models
+from fastapi import FastAPI, Response
 import os
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from app.routers import account, todo, tag 
 import secrets
