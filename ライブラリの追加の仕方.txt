@@ -1,0 +1,7 @@
+ライブラリの追加の仕方
+# 1. 新しいライブラリ（例: httpx）を pyproject.toml に追加する
+uv add httpx
+
+# 2. requirements.txt（ハッシュ付き）を再書き出しする
+uv pip compile pyproject.toml --generate-hashes -o requirements.txt
+手動で主要なライブラリをrequirement.inを書いたら、requirements.txtをそのrequirement.inにあわせたものを生成してくれる
