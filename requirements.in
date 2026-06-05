@@ -11,5 +11,3 @@ passlib[bcrypt]
 pyjwt
 slowapi
 pyjwt[crypto]
-python-jose[cryptography]
-python-jose
