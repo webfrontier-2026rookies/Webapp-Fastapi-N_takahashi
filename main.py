@@ -15,35 +15,30 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.database import  limiter
 
-
-
-
+# 環境変数の読み込み
+ENV = os.getenv("ENVIRONMENT", "development")
+ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h]
+ALLOWED_ORIGINS = [o for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o]
 # ----------------------------------------------------
 # 🛡️ 1. 起動時に「1回だけ」安全に実行されるエリアを定義
 # ----------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    models.Base.metadata.create_all(bind=engine)
+    if ENV == "development":
+        models.Base.metadata.create_all(bind=engine)
     yield
-
 # ----------------------------------------------------
 # 🚀 2. FastAPI本体の起動（lifespanをここで1回だけ渡す！）
 # ----------------------------------------------------
 app = FastAPI(lifespan=lifespan)
 
-# 静的ファイル（CSSなど）の読み込み設定
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
 # ----------------------------------------------------
 # 🔒 3. セキュリティ・ミドルウェア設定
 # ----------------------------------------------------
-ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h]
-ALLOWED_ORIGINS = [o for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o]
-ENV = os.getenv("ENVIRONMENT", "development")
-
 if ENV == "production":
     if not ALLOWED_HOSTS:
         raise RuntimeError("ALLOWED_HOSTS must be set in production")
