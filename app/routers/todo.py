@@ -11,10 +11,11 @@ import logging
 from pydantic import HttpUrl, ValidationError
 from typing import Optional
 import shutil
-from app.schemas import TodoWithTagUpdate
 from app.routers.account import get_current_user
 import secrets
 from sqlalchemy.orm import selectinload
+import app.crud as crud
+from app.schemas import TodoWithTagUpdate
 
 #ディスク容量が10%を下回っているときの警告ログ
 def check_disk_space():
@@ -256,29 +257,17 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
 @router.put("/api/todo/{todo_id}")
 async def update_todo_with_tag(
     todo_id: int, 
-    data: TodoWithTagUpdate,  
+    data: TodoWithTagUpdate,
     db: Session = Depends(get_db)
 ):
-    db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
-    if not db_todo:
-        raise HTTPException(status_code=404, detail="TODOが見つかりません")
-    
-    if data.tag_ids:
-        tags = db.query(models.Tag).filter(models.Tag.id.in_(data.tag_ids)).all()
-    else:
-        tags = []
-    
-    db_todo.title = data.title
-    db_todo.description = data.description
-    db_todo.due_date = data.due_date
-    db_todo.tags = tags  
-    db_todo.link = data.link
-    db_todo.memo = data.memo
-
-    # ステータスの判定
     if isinstance(data.status, str):
-        db_todo.status = (data.status.lower() == 'true')
+        data.status = (data.status.lower() == 'true')
     else:
-        db_todo.status = bool(data.status)
+        data.status = bool(data.status)
+
+    update_todo = crud.update_todo(db,todo_id,data)
+
+    if not update_todo:
+        raise HTTPException(status_code=404, detail="TODOが見つかりません")
     
     return {"status": "success", "message": "更新が完了しました"}
