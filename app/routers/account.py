@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 # ----------------------------------------------------
 # 📄 1. アカウント登録画面の表示 (GET)
 # ----------------------------------------------------
-@router.get("/account/register", response_class=HTMLResponse) # 💡URLを統一
+@router.get("/account/register", response_class=HTMLResponse)
 def get_account_register(request: Request):
     csrf_token = secrets.token_urlsafe(32)
 
@@ -52,14 +52,13 @@ def register_button_clicked(
     db.commit()
     db.refresh(new_user)
 
-    # 💡リダイレクト先を正しいログインURLに統一
     return RedirectResponse(url="/account/login", status_code=303)
 
 
 # ----------------------------------------------------
 # 📄 3. ログイン画面の表示 (GET)
 # ----------------------------------------------------
-@router.get("/account/login", response_class=HTMLResponse) # 💡URLを統一
+@router.get("/account/login", response_class=HTMLResponse) 
 def get_login_page(request: Request):
     csrf_token = secrets.token_urlsafe(32)
     response = templates.TemplateResponse(
@@ -94,17 +93,13 @@ def login_button_clicked(
         return {"error": "ユーザー名、またはパスワードが違います"}
 
     response = RedirectResponse(url="/api/todo", status_code=303)
-    
-    # 🟢 auth.pyを直したので、これで100%エラーにならず動きます！
+
     access_token = create_access_token(data={"username": username})
     current_csrf_token = request.cookies.get("csrf_token")
 
     ENV = os.getenv("ENVIRONMENT", "development")
 
-    # 🔒 クッキーの設定を完璧に修正
-    # access_token はJavaScriptに触らせない(httponly=True)、全体で使う(path="/")
     response.set_cookie(key="access_token", value=access_token, httponly=True, secure=(ENV=="production"), max_age=3600, path="/")
-    # csrf_token は画面側から読ませる(httponly=False)、全体で使う(path="/")
     response.set_cookie(key="csrf_token", value=current_csrf_token, httponly=False, path="/")
 
     return response
