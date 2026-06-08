@@ -44,21 +44,6 @@ services:
       - .:/app
 
   #テスト用
-  test_app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    volumes:
-      - .:/app
-    env_file:
-      - .env.test
-    ports:
-      - ${PORT_APP}
-    depends_on:
-      - test_db
-    command: sh -c "pip install pytest pytest-mock httpx && tail -f /dev/null"
-    environment:
-      - PYTHONPATH=/app:/app/app
   test_db:
     image: postgres:15
     env_file:
