@@ -145,5 +145,3 @@ Docker Compose 経由でテスト環境を用意する場合は、`test_app` と
 - `packages.json` は Tailwind CSS 用の `devDependencies` が定義されています。
 
 ---
-
-必要であれば、README にさらに「開発者向け実装説明」や「データベース初期化手順」などの節を追加できます。
