@@ -141,6 +141,9 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
 # todo作成フォーム表示用
 @router.get("/todo/create")
 async def show_todo_form(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+
     tags = (db.query(models.Tag)
             .filter(models.Tag.username == current_user.username)
             .all())
@@ -233,12 +236,14 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
 
 #todo更新画面表示
 @router.get("/todo/{todo_id}/edit")
-async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db)):
+async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
         
-    tags = db.query(models.Tag).order_by(models.Tag.title).all() 
+    tags = (db.query(models.Tag)
+            .filter(models.Tag.username == current_user.username)
+            .all())
     
     return templates.TemplateResponse(
         request=request, 
@@ -255,29 +260,25 @@ async def update_todo_with_tag(
     db: Session = Depends(get_db)
 ):
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
-    tags = db.query(models.Tag).filter(models.Tag.id.in_(data.tag_id)).all()
     if not db_todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
     
-    tags = []
-    if data.tag_id:
-        tag = db.query(models.Tag).filter(models.Tag.id == data.tag_id).first()
-        if tag:
-            tags.append(tag)
+    if data.tag_ids:
+        tags = db.query(models.Tag).filter(models.Tag.id.in_(data.tag_ids)).all()
+    else:
+        tags = []
     
     db_todo.title = data.title
     db_todo.description = data.description
     db_todo.due_date = data.due_date
-    db_todo.tags = tags
+    db_todo.tags = tags  
     db_todo.link = data.link
     db_todo.memo = data.memo
 
+    # ステータスの判定
     if isinstance(data.status, str):
         db_todo.status = (data.status.lower() == 'true')
     else:
         db_todo.status = bool(data.status)
-
-    db.commit()
-    db.refresh(db_todo)
     
     return {"status": "success", "message": "更新が完了しました"}

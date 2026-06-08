@@ -189,7 +189,11 @@
               >
                 <button type="submit">詳細</button>
               </form>
-              <form action="/api/todo/{todo_id}" method="put" style="margin: 0">
+              <form
+                action="/todo/{{ todo.id }}/edit"
+                method="put"
+                style="margin: 0"
+              >
                 <button type="submit">更新</button>
               </form>
             </div>

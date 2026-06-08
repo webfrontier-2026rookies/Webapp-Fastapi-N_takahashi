@@ -11,6 +11,7 @@ def get_todo_by_id(db: Session, todo_id: int):
 def get_todo_by_title(db: Session, todo_title: str):
     return db.query(Todo).filter(Todo.title == todo_title).first()
 
+# 変更があった項目だけをループ処理で順番に上書き更新する
 def update_todo(db: Session, todo_id: int, todo: TodoUpdate) -> Todo | None:
     db_todo = db.query(Todo).filter(Todo.id == todo_id).first()
     if not db_todo:
