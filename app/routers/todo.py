@@ -46,7 +46,7 @@ templates = Jinja2Templates(directory="templates/todo")
 def on_startup():
     check_disk_space()
 
-router = APIRouter()
+router = APIRouter(tags=["TODO管理"])
 
 # todo一覧表示
 @router.get("/api/todo", response_class=HTMLResponse)
