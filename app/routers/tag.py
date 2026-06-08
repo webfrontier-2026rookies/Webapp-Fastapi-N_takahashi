@@ -11,7 +11,6 @@ import logging
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from app.database import engine
 import shutil
 from app.schemas import TagUpdate
 from app.routers.account import get_current_user
@@ -34,8 +33,6 @@ def escape_like(value: str) -> str:
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 limiter = Limiter(key_func=get_remote_address)
-
-# models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.state.limiter = limiter
@@ -192,14 +189,9 @@ async def update_tag(
     data: TagUpdate,  
     db: Session = Depends(get_db)
 ):
-    db_tag = db.query(models.Tag).filter(models.Tag.id == tag_id).first()
-    if not db_tag:
+    update_tag = crud.update_tag(db,tag_id,data)
+
+    if not update_tag:
         raise HTTPException(status_code=404, detail="TAGが見つかりません")
-    
-    db_tag.title = data.title
-    db_tag.description = data.description
-    db_tag.usage = data.usage 
-    db.commit()
-    db.refresh(db_tag)
     
     return {"status": "success", "message": "タグの更新が完了しました"}

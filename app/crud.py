@@ -2,15 +2,6 @@ from sqlalchemy.orm import Session
 from app.models import Todo, Tag
 from app.schemas import TodoCreate, TodoUpdate, TagCreate, TagUpdate
 
-def get_todo(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Todo).offset(skip).limit(limit).all()
-
-def get_todo_by_id(db: Session, todo_id: int):
-    return db.query(Todo).filter(Todo.id == todo_id).first()
-
-def get_todo_by_title(db: Session, todo_title: str):
-    return db.query(Todo).filter(Todo.title == todo_title).first()
-
 # 変更があった項目だけをループ処理で順番に上書き更新する
 def update_todo(db: Session, todo_id: int, todo: TodoUpdate) -> Todo | None:
     db_todo = db.query(Todo).filter(Todo.id == todo_id).first()
@@ -42,18 +33,6 @@ def create_tag(db: Session, tag: TagCreate, username: str) -> Tag:
     db.commit()
     db.refresh(db_tag)
     return db_tag
-
-def get_tag(db: Session, tag_id: int):
-    return db.query(Tag).filter(Tag.id == tag_id).first()
-
-def get_tag_by_id(db: Session, tag_id: int):
-    return db.query(Tag).filter(Tag.id == tag_id).first()
-
-def get_tag_by_title(db: Session, tag_title: str):
-    return db.query(Tag).filter(Tag.title == tag_title).first()
-
-def get_tag_list(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Tag).offset(skip).limit(limit).all()
 
 def update_tag(db: Session, tag_id: int, tag: TagUpdate) -> Tag | None:
     db_tag = db.query(Tag).filter(Tag.id == tag_id).first()
