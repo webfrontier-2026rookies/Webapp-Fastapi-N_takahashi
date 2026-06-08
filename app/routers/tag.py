@@ -48,7 +48,7 @@ templates = Jinja2Templates(directory="templates/tag")
 def on_startup():
     check_disk_space()
 
-router = APIRouter()
+router = APIRouter(tags=["タグ管理"])
 
 #tag一覧表示
 @router.get("/api/tag", response_class=HTMLResponse)
