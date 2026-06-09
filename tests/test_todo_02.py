@@ -93,3 +93,33 @@ def test_todo_update():
     assert test_todo.description == "無事に更新されました"
 
     db.close()
+
+#todoの削除ができるかどうかのテストコード
+def test_tag_delete():
+    db = next(get_db())
+    db.query(Todo).delete()
+
+    todo = Todo(
+        title="todo削除テスト",
+        due_date=datetime.now() + timedelta(days=6),
+        status=False,
+        description="削除テスト確認", 
+        username="kiki",
+    )
+
+    db.add(todo)
+    db.commit()
+
+    todo_id = todo.id
+    db.close()
+
+    response = client.delete(f"/api/todo/{todo_id}")
+
+    assert response.status_code == 200
+
+    new_db = next(get_db())
+    deleted_tag = new_db.query(Todo).filter(Todo.id == todo_id).first()
+
+    assert deleted_tag is None
+
+    new_db.close()
