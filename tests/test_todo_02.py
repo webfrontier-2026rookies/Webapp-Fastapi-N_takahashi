@@ -123,3 +123,25 @@ def test_tag_delete():
     assert deleted_tag is None
 
     new_db.close()
+
+#todoの詳細表示ができるかどうかのテストコード
+def test_todo_detail_page():
+    db = next(get_db())
+
+    test_todo = Todo(
+        title="詳細表示のTODO",
+        description="このが画面やAPIから見えれば合格です",
+        due_date=datetime.now() + timedelta(days=3),
+        status=False,
+        username=2525,
+        link="https://meet.google.com/att-diiz-edw",
+        memo="rrrr"
+    )
+
+    db.add(test_todo)
+    db.commit()
+    db.refresh(test_todo) 
+
+    response = client.get(f"/api/todo/{test_todo.id}")
+
+    assert response.status_code == 200
