@@ -1,7 +1,6 @@
 import sys
 import os
 
-from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from main import app
 from app.models import Tag, TodoTag
@@ -87,3 +86,32 @@ def test_todo_update():
     assert test_tag.usage == "iiiii"
 
     db.close()
+
+#tagの削除ができるかどうかのテストコード
+def test_tag_delete():
+    db = next(get_db())
+    db.query(Tag).delete()
+
+    tag = Tag(
+        title="todo削除テスト",
+        usage="テスト確認の際",
+        description="削除テスト確認", 
+        username="kiki",
+    )
+
+    db.add(tag)
+    db.commit()
+
+    tag_id = tag.id
+    db.close()
+
+    response = client.delete(f"/api/tag/{tag_id}")
+
+    assert response.status_code == 200
+
+    new_db = next(get_db())
+    deleted_tag = new_db.query(Tag).filter(Tag.id == tag_id).first()
+
+    assert deleted_tag is None
+
+    new_db.close()
