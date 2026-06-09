@@ -145,3 +145,13 @@ def test_todo_detail_page():
     response = client.get(f"/api/todo/{test_todo.id}")
 
     assert response.status_code == 200
+
+#todoの作成フォームが表示できるかどうかのテストコード
+def test_todo_create_page():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+
+    response = client.get("/todo/create")
+
+    assert response.status_code == 200
