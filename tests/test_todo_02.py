@@ -61,3 +61,35 @@ def test_todo_create():
     assert response.status_code == 200
 
     db.close()
+
+#todoの更新ができるかどうかのテストコード作成
+def test_todo_update():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+
+    test_todo = Todo(
+        title="更新前のTODO",
+        description="これから更新されます",
+        due_date=datetime.now(),
+        status=False,
+        username="kiki",
+    )
+    db.add(test_todo)
+    db.commit()
+
+    response = client.put(
+        f"/api/todo/{test_todo.id}",
+        json={
+            "title": "更新後のTODOタイトル",
+            "description": "無事に更新されました",
+            "tag_id": 1
+        }
+    )
+    assert response.status_code == 200
+
+    db.refresh(test_todo)
+    assert test_todo.title == "更新後のTODOタイトル"
+    assert test_todo.description == "無事に更新されました"
+
+    db.close()
