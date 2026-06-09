@@ -19,15 +19,16 @@ def test_account_register():
     db = next(get_db())
     
     try:
+        #登録するusernameと同じものを削除
         db.query(User).filter(User.username == "aiueo").delete()
         db.commit()
     finally:
         db.close()
     
-    # 2. 本番のロジック（verify_access_token）を突破するための有効なJWTをその場で生成！
+    #本番のロジック（verify_access_token）を突破するための有効なJWTをその場で生成
     real_jwt = create_access_token(data={"username": "note"})
 
-    # 3. 本番のCSRF検証（verify_csrf_token）を突破するためのダミーの共通文字列
+    #本番のCSRF検証（verify_csrf_token）を突破するためのダミーの共通文字列
     dummy_csrf = "perfect_match_csrf_token_123"
 
     register_data = {
@@ -35,15 +36,15 @@ def test_account_register():
         "hashed_password": "mamoru" 
     }
 
-    # 5. ⭕【修正】本番コードが探しているクッキー名「access_token」と「csrf_token」をセット！
+    #本番コードが探しているクッキー名をセット
     test_cookies = {
         "access_token": real_jwt,
-        "csrf_token": dummy_csrf  # 🟢 クッキー側のCSRFトークン
+        "csrf_token": dummy_csrf
     }
 
-    # 6. ⭕【修正】本番コードが探しているヘッダー名に、上のクッキーと同じ文字列をセット！
+    #本番コードが探しているヘッダー名に、上のクッキーと同じ文字列をセット
     test_headers = {
-        "X-CSRF-Token": dummy_csrf  # 🟢 これで secrets.compare_digest が「一致！」と判定します
+        "X-CSRF-Token": dummy_csrf 
     }
     
     response = client.post("/account/register", data=register_data,headers=test_headers,cookies=test_cookies)
