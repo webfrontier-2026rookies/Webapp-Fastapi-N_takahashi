@@ -139,14 +139,8 @@ def test_todo_detail_page():
 
 #tagの作成フォームが表示できるかどうかのテストコード
 def test_todo_create_page():
-    db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Tag).delete()
-
     response = client.get("/tag/create")
 
     assert response.status_code == 200
 
     print("作成フォーム表示成功")
-
-    db.close()

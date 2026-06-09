@@ -238,6 +238,9 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
 #todo更新画面表示
 @router.get("/todo/{todo_id}/edit")
 async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+
     todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not todo:
         raise HTTPException(status_code=404, detail="TODOが見つかりません")
