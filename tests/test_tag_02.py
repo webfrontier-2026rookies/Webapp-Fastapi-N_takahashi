@@ -55,3 +55,35 @@ def test_tag_create():
     assert response.status_code == 200
 
     db.close()
+
+#tagの更新ができるかどうかのテストコード作成
+def test_todo_update():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Tag).delete()
+
+    test_tag = Tag(
+        title="更新前のTAG",
+        description="これから更新されます",
+        usage="yyyy",
+        username="kiki",
+    )
+    db.add(test_tag)
+    db.commit()
+
+    response = client.put(
+        f"/api/tag/{test_tag.id}",
+        json={
+            "title": "更新後のTODOタイトル",
+            "description": "無事に更新されました",
+            "usage": "iiiii",
+        }
+    )
+    assert response.status_code == 200
+
+    db.refresh(test_tag)
+    assert test_tag.title == "更新後のTODOタイトル"
+    assert test_tag.description == "無事に更新されました"
+    assert test_tag.usage == "iiiii"
+
+    db.close()
