@@ -1,7 +1,7 @@
 import sys
 import os
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from main import app
 from app.models import Todo, TodoTag
@@ -32,6 +32,32 @@ def test_todo_list():
 
     response = client.get("/api/todo")
 
+    assert response.status_code == 200
+
+    db.close()
+
+#todoの検索ができるかどうかのテストコード
+
+#todoの作成ができるかどうかのテストコード
+def test_todo_create():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Todo).delete()
+
+    todo = Todo(
+        title="プログラミングの勉強",
+        due_date=datetime.now() + timedelta(days=5),
+        description="FastAPIのテストを書く", 
+        status=True,
+        username="kiki",
+        link="https://calendar.google.com/calendar/u/0/r",
+        memo="aaaaaa",
+    )
+
+    db.add(todo)
+    db.commit()
+
+    response = client.post("/api/todo", data={"title": "プログラミングの勉強","description": "FastAPIのテストを書く","due_date": datetime.now() + timedelta(days=5),"status": True, "link": "https://calendar.google.com/calendar/u/0/r", "memo": "aaaaaa"})   
     assert response.status_code == 200
 
     db.close()
