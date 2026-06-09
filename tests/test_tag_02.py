@@ -115,3 +115,24 @@ def test_tag_delete():
     assert deleted_tag is None
 
     new_db.close()
+
+#tagの詳細表示ができるかどうかのテストコード
+def test_todo_detail_page():
+    db = next(get_db())
+    db.query(TodoTag).delete()
+    db.query(Tag).delete()
+
+    test_tag = Tag(
+        title="詳細表示のテスト用TAG",
+        description="このTAGが画面やAPIから見えれば合格です",
+        usage="テスト",
+        username=2525
+    )
+
+    db.add(test_tag)
+    db.commit()
+    db.refresh(test_tag) 
+
+    response = client.get(f"/api/tag/{test_tag.id}")
+
+    assert response.status_code == 200
