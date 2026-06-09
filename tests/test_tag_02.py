@@ -23,7 +23,7 @@ def test_todo_list():
         title="一覧表示のテスト用TAG",
         description="このTAGが画面やAPIから見えれば合格です",
         usage="aiueo",
-        username=2525,
+        username="test_username",
     )
     db.add(test_tag)
     db.commit()
@@ -43,7 +43,7 @@ def test_tag_create():
     tag = Tag(
         title="プログラミングのテスト",
         description="FastAPIの勉強を書く", 
-        username=2525,
+        username="test_username",
         usage="wwwww"
     )
 
@@ -65,7 +65,7 @@ def test_todo_update():
         title="更新前のTAG",
         description="これから更新されます",
         usage="yyyy",
-        username="kiki",
+        username="test_username",
     )
     db.add(test_tag)
     db.commit()
@@ -96,7 +96,7 @@ def test_tag_delete():
         title="todo削除テスト",
         usage="テスト確認の際",
         description="削除テスト確認", 
-        username="kiki",
+        username="test_username",
     )
 
     db.add(tag)
@@ -126,7 +126,7 @@ def test_todo_detail_page():
         title="詳細表示のテスト用TAG",
         description="このTAGが画面やAPIから見えれば合格です",
         usage="テスト",
-        username=2525
+        username="test_username"
     )
 
     db.add(test_tag)

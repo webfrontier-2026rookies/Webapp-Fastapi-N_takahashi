@@ -25,7 +25,7 @@ def test_todo_list():
         description="このTODOが画面やAPIから見えれば合格です",
         due_date=datetime.now(),
         status=False,
-        username=2525,
+        username="test_username",
     )
     db.add(test_todo)
     db.commit()
@@ -49,7 +49,7 @@ def test_todo_create():
         due_date=datetime.now() + timedelta(days=5),
         description="FastAPIのテストを書く", 
         status=True,
-        username="kiki",
+        username="test_username",
         link="https://calendar.google.com/calendar/u/0/r",
         memo="aaaaaa",
     )
@@ -73,7 +73,7 @@ def test_todo_update():
         description="これから更新されます",
         due_date=datetime.now(),
         status=False,
-        username="kiki",
+        username="test_username",
     )
     db.add(test_todo)
     db.commit()
@@ -104,7 +104,7 @@ def test_tag_delete():
         due_date=datetime.now() + timedelta(days=6),
         status=False,
         description="削除テスト確認", 
-        username="kiki",
+        username="test_username",
     )
 
     db.add(todo)
@@ -133,7 +133,7 @@ def test_todo_detail_page():
         description="このが画面やAPIから見えれば合格です",
         due_date=datetime.now() + timedelta(days=3),
         status=False,
-        username=2525,
+        username="test_username",
         link="https://meet.google.com/att-diiz-edw",
         memo="rrrr"
     )
@@ -165,7 +165,7 @@ def test_todo_update_page():
             description="このTODOを編集します",
             due_date=datetime.now(),
             status=False,
-            username="note"
+            username="test_username"
         )
         db.add(test_todo)
         db.commit()
