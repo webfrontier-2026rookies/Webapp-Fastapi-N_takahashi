@@ -136,3 +136,11 @@ def test_todo_detail_page():
     response = client.get(f"/api/tag/{test_tag.id}")
 
     assert response.status_code == 200
+
+#tagの作成フォームが表示できるかどうかのテストコード
+def test_todo_create_page():
+    response = client.get("/tag/create")
+
+    assert response.status_code == 200
+
+    print("作成フォーム表示成功")

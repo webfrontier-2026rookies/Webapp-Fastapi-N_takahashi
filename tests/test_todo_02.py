@@ -148,10 +148,35 @@ def test_todo_detail_page():
 
 #todoの作成フォームが表示できるかどうかのテストコード
 def test_todo_create_page():
-    db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Todo).delete()
-
     response = client.get("/todo/create")
 
     assert response.status_code == 200
+
+#todoの更新画面表示ができるかどうかのテストコード
+def test_todo_update_page():
+    db = next(get_db())
+    
+    try:
+        db.query(TodoTag).delete()
+        db.query(Todo).delete()
+        
+        test_todo = Todo(
+            title="編集画面テスト用のTODO",
+            description="このTODOを編集します",
+            due_date=datetime.now(),
+            status=False,
+            username="note"
+        )
+        db.add(test_todo)
+        db.commit()
+        db.refresh(test_todo) 
+        
+        target_id = test_todo.id 
+
+    finally:
+        db.close()
+
+    response = client.get(f"/todo/{target_id}/edit")
+
+    assert response.status_code == 200
+    print("更新画面表示成功")
