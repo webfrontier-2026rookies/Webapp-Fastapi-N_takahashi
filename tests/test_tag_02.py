@@ -144,3 +144,31 @@ def test_todo_create_page():
     assert response.status_code == 200
 
     print("作成フォーム表示成功")
+
+#tagの更新画面表示ができるかどうかのテストコード
+def test_todo_update_page():
+    db = next(get_db())
+    
+    try:
+        db.query(TodoTag).delete()
+        db.query(Tag).delete()
+        
+        test_tag = Tag(
+            title="編集画面テスト用のTAG",
+            description="このTODOを編集します",
+            usage="ttttt",
+            username="note"
+        )
+        db.add(test_tag)
+        db.commit()
+        db.refresh(test_tag) 
+        
+        target_id = test_tag.id 
+
+    finally:
+        db.close()
+
+    response = client.get(f"/tag/{target_id}/edit")
+
+    assert response.status_code == 200
+    print("更新画面表示成功")
