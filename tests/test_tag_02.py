@@ -55,6 +55,46 @@ def test_tag_create():
 
     db.close()
 
+#tagの検索ができるかどうかのテストコード
+def test_todo_search():
+    db = next(get_db())
+    try:
+        db.query(TodoTag).delete()
+        db.query(Tag).delete()
+
+        tag1 = Tag(
+            title="検索の検証用のtag",
+            description="tag検索のテストコード用のtag",
+            usage="ooooo",
+            username="2525"
+        )
+
+        tag2 = Tag(
+            title="技術勉強",
+            description="技術勉強用のテストコード",
+            usage="uuuu",
+            username=2525
+        )
+
+        tag3 = Tag(
+            title="夕飯用の買い出し",
+            description="今夜の夕飯の買い出し",
+            usage="yyyy",
+            username=2525
+        )
+
+        db.add_all([tag1,tag2,tag3])
+        db.commit()
+
+        response = client.get("/api/tag?q=勉強")
+
+        assert response.status_code == 200
+        print("検索成功")
+
+    finally:
+        db.close()
+
+
 #tagの更新ができるかどうかのテストコード作成
 def test_todo_update():
     db = next(get_db())
