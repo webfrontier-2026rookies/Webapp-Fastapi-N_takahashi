@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from main import app
 from app.models import Tag, TodoTag
 from app.database import get_db
+from app.auth import create_access_token
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -94,6 +95,56 @@ def test_todo_search():
     finally:
         db.close()
 
+#tagの並び替えができるかどうかのテストコード
+def test_tag_sort():
+    db = next(get_db())
+
+    try:
+        db.query(TodoTag).delete()
+        db.query(Tag).delete()
+
+        tag1 = Tag(
+            title="スーパーで買い物",
+            description="牛乳を買う",  
+            usage="本日中に買い物をすること",
+            username="note"
+        )
+        tag2 = Tag(
+            title="デパ地下で買い物",
+            description="お惣菜を買う",
+            usage="買い物をすること",
+            username="note"
+        )
+        tag3 = Tag(
+            title="プログラミングの勉強",
+            description="FastAPIのテストを書く",
+            usage="テスト用の勉強",
+            username="note"
+        )
+
+        db.add_all([tag1, tag2, tag3])
+        db.commit()
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": "note"})
+        }
+
+        response = client.get("/api/tag?q=買い物",cookies=test_cookies)
+        assert response.status_code == 200
+
+        html_content = response.text
+
+        assert "スーパーで買い物" in html_content
+        assert "デパ地下で買い物" in html_content
+        assert "プログラミングの勉強" not in html_content
+
+        idx_today = html_content.find("デパ地下で買い物")
+        idx_tomorrow = html_content.find("スーパーで買い物")
+        
+        assert idx_today > idx_tomorrow
+
+    finally:
+        db.close()
 
 #tagの更新ができるかどうかのテストコード作成
 def test_todo_update():
