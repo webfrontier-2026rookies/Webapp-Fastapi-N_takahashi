@@ -96,6 +96,60 @@ def test_todo_search():
     finally:
         db.close()
 
+#todoの並び替えができるかどうかのテストコード
+def test_todo_sort():
+    db = next(get_db())
+
+    try:
+        db.query(TodoTag).delete()
+        db.query(Todo).delete()
+
+        todo1 = Todo(
+            title="スーパーで買い物",
+            description="牛乳を買う",  
+            due_date=datetime.now() + timedelta(days=1),
+            status=True,
+            username="note"
+        )
+        todo2 = Todo(
+            title="デパ地下で買い物",
+            description="お惣菜を買う",
+            due_date=datetime.now(), 
+            status=False,
+            username="note"
+        )
+        todo3 = Todo(
+            title="プログラミングの勉強",
+            description="FastAPIのテストを書く",
+            due_date=datetime.now() + timedelta(days=5),
+            status=False,
+            username="note"
+        )
+
+        db.add_all([todo1, todo2, todo3])
+        db.commit()
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": "note"})
+        }
+
+        response = client.get("/api/todo?q=買い物",cookies=test_cookies)
+        assert response.status_code == 200
+
+        html_content = response.text
+
+        assert "スーパーで買い物" in html_content
+        assert "デパ地下で買い物" in html_content
+        assert "プログラミングの勉強" not in html_content
+
+        idx_today = html_content.find("デパ地下で買い物")
+        idx_tomorrow = html_content.find("スーパーで買い物")
+        
+        assert idx_today < idx_tomorrow
+
+    finally:
+        db.close()
+
 #todoの作成ができるかどうかのテストコード
 def test_todo_create():
     db = next(get_db())
