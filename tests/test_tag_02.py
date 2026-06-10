@@ -38,27 +38,39 @@ def test_todo_list():
 #tagの作成ができるかどうかのテストコード
 def test_tag_create():
     db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Tag).delete()
 
-    tag = Tag(
-        title="プログラミングのテスト",
-        description="FastAPIの勉強を書く", 
-        username=2525,
-        usage="wwwww"
-    )
+    username = os.getenv("TEST_USERNAME")
 
-    db.add(tag)
-    db.commit()
+    try:
+        db.query(TodoTag).delete()
+        db.query(Tag).delete()
 
-    response = client.post("/api/tag", data={"title": "プログラミングの勉強","description": "FastAPIのテストを書く","usage": "wwwww"})   
-    assert response.status_code == 200
+        tag = Tag(
+            title="プログラミングのテスト",
+            description="FastAPIの勉強を書く", 
+            username=username,
+            usage="wwwww"
+        )
 
-    db.close()
+        db.add(tag)
+        db.commit()
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
+
+        response = client.post("/api/tag", data={"title": "プログラミングの勉強","description": "FastAPIのテストを書く","usage": "wwwww"}, cookies=test_cookies)   
+        assert response.status_code == 200
+
+    finally:
+        db.close()
 
 #tagの検索ができるかどうかのテストコード
 def test_todo_search():
     db = next(get_db())
+
+    username = os.getenv("TEST_USERNAME")
+
     try:
         db.query(TodoTag).delete()
         db.query(Tag).delete()
@@ -67,27 +79,31 @@ def test_todo_search():
             title="検索の検証用のtag",
             description="tag検索のテストコード用のtag",
             usage="ooooo",
-            username="2525"
+            username=username
         )
 
         tag2 = Tag(
             title="技術勉強",
             description="技術勉強用のテストコード",
             usage="uuuu",
-            username=2525
+            username=username
         )
 
         tag3 = Tag(
             title="夕飯用の買い出し",
             description="今夜の夕飯の買い出し",
             usage="yyyy",
-            username=2525
+            username=username
         )
 
         db.add_all([tag1,tag2,tag3])
         db.commit()
 
-        response = client.get("/api/tag?q=勉強")
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
+
+        response = client.get("/api/tag?q=勉強", cookies=test_cookies)
 
         assert response.status_code == 200
         print("検索成功")
@@ -99,6 +115,8 @@ def test_todo_search():
 def test_tag_sort():
     db = next(get_db())
 
+    username = os.getenv("TEST_USERNAME")
+
     try:
         db.query(TodoTag).delete()
         db.query(Tag).delete()
@@ -107,26 +125,26 @@ def test_tag_sort():
             title="スーパーで買い物",
             description="牛乳を買う",  
             usage="本日中に買い物をすること",
-            username="note"
+            username=username
         )
         tag2 = Tag(
             title="デパ地下で買い物",
             description="お惣菜を買う",
             usage="買い物をすること",
-            username="note"
+            username=username
         )
         tag3 = Tag(
             title="プログラミングの勉強",
             description="FastAPIのテストを書く",
             usage="テスト用の勉強",
-            username="note"
+            username=username
         )
 
         db.add_all([tag1, tag2, tag3])
         db.commit()
 
         test_cookies = {
-            "access_token": create_access_token(data={"username": "note"})
+            "access_token": create_access_token(data={"username": username})
         }
 
         response = client.get("/api/tag?q=買い物",cookies=test_cookies)
@@ -149,84 +167,112 @@ def test_tag_sort():
 #tagの更新ができるかどうかのテストコード作成
 def test_todo_update():
     db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Tag).delete()
 
-    test_tag = Tag(
-        title="更新前のTAG",
-        description="これから更新されます",
-        usage="yyyy",
-        username="kiki",
-    )
-    db.add(test_tag)
-    db.commit()
+    username = os.getenv("TEST_USERNAME")
 
-    response = client.put(
-        f"/api/tag/{test_tag.id}",
-        json={
-            "title": "更新後のTODOタイトル",
-            "description": "無事に更新されました",
-            "usage": "iiiii",
+    try:
+        db.query(TodoTag).delete()
+        db.query(Tag).delete()
+
+        test_tag = Tag(
+            title="更新前のTAG",
+            description="これから更新されます",
+            usage="yyyy",
+            username=username,
+        )
+        db.add(test_tag)
+        db.commit()
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
         }
-    )
-    assert response.status_code == 200
 
-    db.refresh(test_tag)
-    assert test_tag.title == "更新後のTODOタイトル"
-    assert test_tag.description == "無事に更新されました"
-    assert test_tag.usage == "iiiii"
+        response = client.put(
+            f"/api/tag/{test_tag.id}",
+            json={
+                "title": "更新後のTODOタイトル",
+                "description": "無事に更新されました",
+                "usage": "iiiii",
+            }, cookies=test_cookies
+        )
+        assert response.status_code == 200
 
-    db.close()
+        db.refresh(test_tag)
+        assert test_tag.title == "更新後のTODOタイトル"
+        assert test_tag.description == "無事に更新されました"
+        assert test_tag.usage == "iiiii"
+
+    finally:
+        db.close()
 
 #tagの削除ができるかどうかのテストコード
 def test_tag_delete():
     db = next(get_db())
-    db.query(Tag).delete()
 
-    tag = Tag(
-        title="todo削除テスト",
-        usage="テスト確認の際",
-        description="削除テスト確認", 
-        username="kiki",
-    )
+    username = os.getenv("TEST_USERNAME")
 
-    db.add(tag)
-    db.commit()
+    try:
+        db.query(Tag).delete()
 
-    tag_id = tag.id
-    db.close()
+        tag = Tag(
+            title="todo削除テスト",
+            usage="テスト確認の際",
+            description="削除テスト確認", 
+            username=username,
+        )
 
-    response = client.delete(f"/api/tag/{tag_id}")
+        db.add(tag)
+        db.commit()
 
-    assert response.status_code == 200
+        tag_id = tag.id
+        db.close()
 
-    new_db = next(get_db())
-    deleted_tag = new_db.query(Tag).filter(Tag.id == tag_id).first()
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
 
-    assert deleted_tag is None
+        response = client.delete(f"/api/tag/{tag_id}", cookies=test_cookies)
 
-    new_db.close()
+        assert response.status_code == 200
+
+        new_db = next(get_db())
+        deleted_tag = new_db.query(Tag).filter(Tag.id == tag_id).first()
+
+        assert deleted_tag is None
+
+    finally:
+        new_db.close()
 
 #tagの詳細表示ができるかどうかのテストコード
 def test_todo_detail_page():
     db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Tag).delete()
 
-    test_tag = Tag(
-        title="詳細表示のテスト用TAG",
-        description="このTAGが画面やAPIから見えれば合格です",
-        usage="テスト",
-        username=2525
-    )
+    username = os.getenv("TEST_USERNAME")
 
-    db.add(test_tag)
-    db.commit()
-    db.refresh(test_tag) 
+    try:
+        db.query(TodoTag).delete()
+        db.query(Tag).delete()
 
-    response = client.get(f"/api/tag/{test_tag.id}")
+        test_tag = Tag(
+            title="詳細表示のテスト用TAG",
+            description="このTAGが画面やAPIから見えれば合格です",
+            usage="テスト",
+            username=username
+        )
 
-    assert response.status_code == 200
+        db.add(test_tag)
+        db.commit()
+        db.refresh(test_tag) 
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
+
+        response = client.get(f"/api/tag/{test_tag.id}", cookies=test_cookies)
+
+        assert response.status_code == 200
+    finally:
+        db.close()
 
 #tagの作成フォームが表示できるかどうかのテストコード
 def test_todo_create_page():
@@ -239,6 +285,8 @@ def test_todo_create_page():
 #tagの更新画面表示ができるかどうかのテストコード
 def test_todo_update_page():
     db = next(get_db())
+
+    username = os.getenv("TEST_USERNAME")
     
     try:
         db.query(TodoTag).delete()
@@ -248,7 +296,7 @@ def test_todo_update_page():
             title="編集画面テスト用のTAG",
             description="このTODOを編集します",
             usage="ttttt",
-            username="note"
+            username=username
         )
         db.add(test_tag)
         db.commit()
@@ -256,10 +304,16 @@ def test_todo_update_page():
         
         target_id = test_tag.id 
 
-    finally:
         db.close()
 
-    response = client.get(f"/tag/{target_id}/edit")
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
 
-    assert response.status_code == 200
-    print("更新画面表示成功")
+        response = client.get(f"/tag/{target_id}/edit",cookies=test_cookies)
+
+        assert response.status_code == 200
+        print("更新画面表示成功")
+
+    finally:
+        db.close()
