@@ -121,6 +121,8 @@ async def read_root(
 # todo詳細表示
 @router.get("/api/todo/{todo_id}", response_class=HTMLResponse)
 async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    csrf_token = secrets.token_urlsafe(32)
+
     if isinstance(current_user, RedirectResponse):
         return current_user
     
@@ -136,12 +138,14 @@ async def get_todo_detail(request: Request, todo_id: int, db: Session = Depends(
     return templates.TemplateResponse(
         request=request,
         name="todo_detail.html",
-        context={"todo": todo_data}
+        context={"todo": todo_data,"csrf_token": csrf_token}
     )
 
 # todo作成フォーム表示用
 @router.get("/todo/create")
 async def show_todo_form(request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    csrf_token = secrets.token_urlsafe(32)
+
     if isinstance(current_user, RedirectResponse):
         return current_user
 
@@ -149,7 +153,7 @@ async def show_todo_form(request: Request, db: Session = Depends(get_db), curren
             .filter(models.Tag.username == current_user.username)
             .all())
     return templates.TemplateResponse(
-        request=request, name="todo_create.html", context={"tags": tags},
+        request=request, name="todo_create.html", context={"tags": tags,"csrf_token": csrf_token},
     )
 
 # todo作成処理
@@ -166,6 +170,7 @@ async def post_todo_create(
     tag_ids: list[int] = Form(default=[]),
     current_user: models.User = Depends(get_current_user)
 ):
+
     if isinstance(current_user, RedirectResponse):
         return current_user
 
@@ -215,8 +220,12 @@ async def post_todo_create(
 async def toggle_todo_status(
     todo_id: int,
     status: Optional[str] = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
+    if isinstance(current_user, RedirectResponse):
+        return current_user
+    
     db_todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -228,7 +237,7 @@ async def toggle_todo_status(
 
 # todo削除処理
 @router.delete("/api/todo/{todo_id}")  
-async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+async def delete_todo(todo_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     crud.delete_todo(db, todo_id)
     #todo削除の完了のログ
     logger.info(f"Todo(ID: {todo_id})が削除されました。")
@@ -238,6 +247,7 @@ async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
 #todo更新画面表示
 @router.get("/todo/{todo_id}/edit")
 async def show_todo_update(todo_id: int, request: Request, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+
     if isinstance(current_user, RedirectResponse):
         return current_user
 
@@ -261,7 +271,8 @@ async def show_todo_update(todo_id: int, request: Request, db: Session = Depends
 async def update_todo_with_tag(
     todo_id: int, 
     data: TodoWithTagUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     if isinstance(data.status, str):
         data.status = (data.status.lower() == 'true')
