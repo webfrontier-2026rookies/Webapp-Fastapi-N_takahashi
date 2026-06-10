@@ -96,10 +96,6 @@ def test_todo_search():
     finally:
         db.close()
 
-
-
-
-
 #todoの作成ができるかどうかのテストコード
 def test_todo_create():
     db = next(get_db())
