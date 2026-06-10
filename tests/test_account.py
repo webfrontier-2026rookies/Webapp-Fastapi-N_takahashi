@@ -15,16 +15,18 @@ if parent_dir not in sys.path:
 
 client = TestClient(app)
 
-username = "test_user_999"
-password = "password123"
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
 
 def test_account_register():
     app.dependency_overrides[verify_csrf_token] = lambda: None
-
     db = next(get_db())
+
+    username = os.getenv("TEST_USERNAME")
+    password = os.getenv("TEST_PASSWORD")
+
     try:
+        #同じusernameを削除
         db.query(User).filter(User.username == username).delete()
         db.commit()
     finally:
@@ -38,12 +40,16 @@ def test_account_register():
     response = client.post("/account/register", data=register_data)
 
     assert response.status_code in [200, 303]
-    print("\n✨ アカウント登録のテスト成功！")
+    print("アカウント登録のテスト成功！")
     app.dependency_overrides.clear()
 
 
 def test_login():
     db = next(get_db())
+
+    username = os.getenv("TEST_USERNAME")
+    password = os.getenv("TEST_PASSWORD")
+    
     try:
         db.query(User).filter(User.username == username).delete()
         db_hash = pwd_context.hash(password)
