@@ -62,28 +62,28 @@ def test_todo_search():
         db.query(TodoTag).delete()
         db.query(Tag).delete()
 
-        todo1 = Tag(
-            title="検索の検証用のtodo",
-            description="todo検索のテストコード用のtodo",
+        tag1 = Tag(
+            title="検索の検証用のtag",
+            description="tag検索のテストコード用のtag",
             usage="ooooo",
             username="2525"
         )
 
-        todo2 = Tag(
+        tag2 = Tag(
             title="技術勉強",
             description="技術勉強用のテストコード",
             usage="uuuu",
             username=2525
         )
 
-        todo3 = Tag(
+        tag3 = Tag(
             title="夕飯用の買い出し",
             description="今夜の夕飯の買い出し",
             usage="yyyy",
             username=2525
         )
 
-        db.add_all([todo1,todo2,todo3])
+        db.add_all([tag1,tag2,tag3])
         db.commit()
 
         response = client.get("/api/tag?q=勉強")
