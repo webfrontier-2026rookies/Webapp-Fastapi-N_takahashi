@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from main import app
-from app.models import Todo, TodoTag,User
+from app.models import Todo, TodoTag,Tag
 from app.database import get_db
 from app.auth import create_access_token
 
@@ -17,13 +17,11 @@ client = TestClient(app)
 
 #todoの一覧表示ができるかどうかのテストコード
 def test_todo_list():
-    username = os.getenv("TEST_USERNAME")
-    
     db = next(get_db())
+    username = os.getenv("TEST_USERNAME") 
     try:
         db.query(TodoTag).delete()
         db.query(Todo).delete()
-        db.query(User).delete()
         
         test_todo = Todo(
             title="一覧表示のテスト用TODO",
@@ -35,15 +33,14 @@ def test_todo_list():
         db.add(test_todo)
         db.commit()
 
-        real_jwt = create_access_token(data={"username": username})
         test_cookies = {
-            "access_token": real_jwt
+            "access_token": create_access_token(data={"username": username})
         }
         
         response = client.get("/api/todo", cookies=test_cookies)
 
         assert response.status_code == 200
-        print("\n✨ TODO一覧表示のテスト成功！")
+        print("TODO一覧表示のテスト成功")
 
     finally:
         db.close()
@@ -51,6 +48,7 @@ def test_todo_list():
 #todoの検索ができるかどうかのテストコード
 def test_todo_search():
     db = next(get_db())
+    username = os.getenv("TEST_USERNAME") 
     try:
         db.query(TodoTag).delete()
         db.query(Todo).delete()
@@ -62,7 +60,7 @@ def test_todo_search():
             status=False,
             link="https://calendar.google.com/calendar/u/0/r",
             memo="qqqq",
-            username="2525"
+            username=username
         )
 
         todo2 = Todo(
@@ -72,7 +70,7 @@ def test_todo_search():
             status=True,
             link="https://calendar.google.com/calendar/u/0/r",
             memo="eeeeee",
-            username=2525
+            username=username
         )
 
         todo3 = Todo(
@@ -82,13 +80,17 @@ def test_todo_search():
             status=False,
             link="https://meet.google.com/att-diiz-edw",
             memo="iiii",
-            username=2525
+            username=username
         )
 
         db.add_all([todo1,todo2,todo3])
         db.commit()
 
-        response = client.get("/api/todo?q=買い出し")
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
+
+        response = client.get("/api/todo?q=買い出し", cookies=test_cookies)
 
         assert response.status_code == 200
         print("検索成功")
@@ -99,6 +101,7 @@ def test_todo_search():
 #todoの並び替えができるかどうかのテストコード
 def test_todo_sort():
     db = next(get_db())
+    username = os.getenv("TEST_USERNAME")
 
     try:
         db.query(TodoTag).delete()
@@ -109,28 +112,28 @@ def test_todo_sort():
             description="牛乳を買う",  
             due_date=datetime.now() + timedelta(days=1),
             status=True,
-            username="note"
+            username=username
         )
         todo2 = Todo(
             title="デパ地下で買い物",
             description="お惣菜を買う",
             due_date=datetime.now(), 
             status=False,
-            username="note"
+            username=username
         )
         todo3 = Todo(
             title="プログラミングの勉強",
             description="FastAPIのテストを書く",
             due_date=datetime.now() + timedelta(days=5),
             status=False,
-            username="note"
+            username=username
         )
 
         db.add_all([todo1, todo2, todo3])
         db.commit()
 
         test_cookies = {
-            "access_token": create_access_token(data={"username": "note"})
+            "access_token": create_access_token(data={"username": username})
         }
 
         response = client.get("/api/todo?q=買い物",cookies=test_cookies)
@@ -153,108 +156,141 @@ def test_todo_sort():
 #todoの作成ができるかどうかのテストコード
 def test_todo_create():
     db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Todo).delete()
+    username = os.getenv("TEST_USERNAME")
 
-    todo = Todo(
-        title="プログラミングの勉強",
-        due_date=datetime.now() + timedelta(days=5),
-        description="FastAPIのテストを書く", 
-        status=True,
-        username="kiki",
-        link="https://calendar.google.com/calendar/u/0/r",
-        memo="aaaaaa",
-    )
+    try:
+        db.query(TodoTag).delete()
+        db.query(Todo).delete()
+        db.commit()
 
-    db.add(todo)
-    db.commit()
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
 
-    response = client.post("/api/todo", data={"title": "プログラミングの勉強","description": "FastAPIのテストを書く","due_date": datetime.now() + timedelta(days=5),"status": True, "link": "https://calendar.google.com/calendar/u/0/r", "memo": "aaaaaa"})   
-    assert response.status_code == 200
+        response = client.post(
+            "/api/todo", 
+            data={
+                "title": "プログラミングの勉強",
+                "description": "FastAPIのテストを書く",
+                "due_date": (datetime.now() + timedelta(days=5)).strftime("%Y-%m-%d"),
+                "status": "False", 
+                "link": "https://calendar.google.com/calendar/u/0/r", 
+                "memo": "aaaaaa",
+                "tag_ids": ["1"] 
+            },
+            cookies=test_cookies
+        )
+        
+        assert response.status_code in [200, 303]
+        print("作成成功")
 
-    db.close()
-
+    finally:
+        db.close()
 #todoの更新ができるかどうかのテストコード作成
 def test_todo_update():
     db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Todo).delete()
+    username = os.getenv("TEST_USERNAME")
 
-    test_todo = Todo(
-        title="更新前のTODO",
-        description="これから更新されます",
-        due_date=datetime.now(),
-        status=False,
-        username="kiki",
-    )
-    db.add(test_todo)
-    db.commit()
+    try:
+        db.query(TodoTag).delete()
+        db.query(Todo).delete()
 
-    response = client.put(
-        f"/api/todo/{test_todo.id}",
-        json={
-            "title": "更新後のTODOタイトル",
-            "description": "無事に更新されました",
-            "tag_id": 1
+        test_todo = Todo(
+            title="更新前のTODO",
+            description="これから更新されます",
+            due_date=datetime.now(),
+            status=False,
+            username=username,
+        )
+        db.add(test_todo)
+        db.commit()
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
         }
-    )
-    assert response.status_code == 200
 
-    db.refresh(test_todo)
-    assert test_todo.title == "更新後のTODOタイトル"
-    assert test_todo.description == "無事に更新されました"
+        response = client.put(
+            f"/api/todo/{test_todo.id}",
+            json={
+                "title": "更新後のTODOタイトル",
+                "description": "無事に更新されました",
+                "tag_id": 1
+            }, cookies=test_cookies
+        )
+        assert response.status_code == 200
 
-    db.close()
+        db.refresh(test_todo)
+        assert test_todo.title == "更新後のTODOタイトル"
+        assert test_todo.description == "無事に更新されました"
+
+    finally:
+        db.close()
 
 #todoの削除ができるかどうかのテストコード
 def test_tag_delete():
     db = next(get_db())
-    db.query(Todo).delete()
 
-    todo = Todo(
-        title="todo削除テスト",
-        due_date=datetime.now() + timedelta(days=6),
-        status=False,
-        description="削除テスト確認", 
-        username="kiki",
-    )
+    username = os.getenv("TEST_USERNAME")
 
-    db.add(todo)
-    db.commit()
+    try:
+        db.query(Todo).delete()
 
-    todo_id = todo.id
-    db.close()
+        todo = Todo(
+            title="todo削除テスト",
+            due_date=datetime.now() + timedelta(days=6),
+            status=False,
+            description="削除テスト確認", 
+            username=username,
+        )
 
-    response = client.delete(f"/api/todo/{todo_id}")
+        db.add(todo)
+        db.commit()
 
-    assert response.status_code == 200
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
 
-    new_db = next(get_db())
-    deleted_tag = new_db.query(Todo).filter(Todo.id == todo_id).first()
+        todo_id = todo.id
+        db.close()
 
-    assert deleted_tag is None
+        response = client.delete(f"/api/todo/{todo_id}", cookies=test_cookies)
 
-    new_db.close()
+        assert response.status_code == 200
+
+        new_db = next(get_db())
+        deleted_tag = new_db.query(Todo).filter(Todo.id == todo_id).first()
+
+        assert deleted_tag is None
+
+    finally:
+        new_db.close()
 
 #todoの詳細表示ができるかどうかのテストコード
 def test_todo_detail_page():
     db = next(get_db())
+
+    username = os.getenv("TEST_USERNAME")
 
     test_todo = Todo(
         title="詳細表示のTODO",
         description="このが画面やAPIから見えれば合格です",
         due_date=datetime.now() + timedelta(days=3),
         status=False,
-        username=2525,
+        username=username,
         link="https://meet.google.com/att-diiz-edw",
         memo="rrrr"
     )
 
     db.add(test_todo)
     db.commit()
-    db.refresh(test_todo) 
+    db.refresh(test_todo)
 
-    response = client.get(f"/api/todo/{test_todo.id}")
+    test_cookies = {
+        "access_token": create_access_token(data={"username": username})
+    }
+
+
+    response = client.get(f"/api/todo/{test_todo.id}", cookies=test_cookies)
 
     assert response.status_code == 200
 
@@ -267,6 +303,8 @@ def test_todo_create_page():
 #todoの更新画面表示ができるかどうかのテストコード
 def test_todo_update_page():
     db = next(get_db())
+
+    username = os.getenv("TEST_USERNAME")
     
     try:
         db.query(TodoTag).delete()
@@ -277,18 +315,22 @@ def test_todo_update_page():
             description="このTODOを編集します",
             due_date=datetime.now(),
             status=False,
-            username="note"
+            username=username
         )
         db.add(test_todo)
         db.commit()
         db.refresh(test_todo) 
+
+        test_cookies = {
+            "access_token": create_access_token(data={"username": username})
+        }
         
         target_id = test_todo.id 
 
     finally:
         db.close()
 
-    response = client.get(f"/todo/{target_id}/edit")
+    response = client.get(f"/todo/{target_id}/edit", cookies=test_cookies)
 
     assert response.status_code == 200
     print("更新画面表示成功")

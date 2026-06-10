@@ -35,6 +35,8 @@ services:
       - .env
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - TEST_USERNAME=${TEST_USERNAME}
+      - TEST_PASSWORD=${TEST_PASSWORD}
     command: sh -c "alembic upgrade head && gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000"
     volumes:
       - .:/app
