@@ -4,8 +4,9 @@ import os
 from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from main import app
-from app.models import Todo, TodoTag
+from app.models import Todo, TodoTag,User
 from app.database import get_db
+from app.auth import create_access_token
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -16,27 +17,88 @@ client = TestClient(app)
 
 #todoの一覧表示ができるかどうかのテストコード
 def test_todo_list():
-    db = next(get_db())
-    db.query(TodoTag).delete()
-    db.query(Todo).delete()
+    username = os.getenv("TEST_USERNAME")
     
-    test_todo = Todo(
-        title="一覧表示のテスト用TODO",
-        description="このTODOが画面やAPIから見えれば合格です",
-        due_date=datetime.now(),
-        status=False,
-        username=2525,
-    )
-    db.add(test_todo)
-    db.commit()
+    db = next(get_db())
+    try:
+        db.query(TodoTag).delete()
+        db.query(Todo).delete()
+        db.query(User).delete()
+        
+        test_todo = Todo(
+            title="一覧表示のテスト用TODO",
+            description="このTODOが画面やAPIから見えれば合格です",
+            due_date=datetime.now(),
+            status=False,
+            username=username,
+        )
+        db.add(test_todo)
+        db.commit()
 
-    response = client.get("/api/todo")
+        real_jwt = create_access_token(data={"username": username})
+        test_cookies = {
+            "access_token": real_jwt
+        }
+        
+        response = client.get("/api/todo", cookies=test_cookies)
 
-    assert response.status_code == 200
+        assert response.status_code == 200
+        print("\n✨ TODO一覧表示のテスト成功！")
 
-    db.close()
+    finally:
+        db.close()
 
 #todoの検索ができるかどうかのテストコード
+def test_todo_search():
+    db = next(get_db())
+    try:
+        db.query(TodoTag).delete()
+        db.query(Todo).delete()
+
+        todo1 = Todo(
+            title="検索の検証用のtodo",
+            description="todo検索のテストコード用のtodo",
+            due_date=datetime.now(),
+            status=False,
+            link="https://calendar.google.com/calendar/u/0/r",
+            memo="qqqq",
+            username="2525"
+        )
+
+        todo2 = Todo(
+            title="技術勉強",
+            description="技術勉強用のテストコード",
+            due_date=datetime.now()+ timedelta(days=4),
+            status=True,
+            link="https://calendar.google.com/calendar/u/0/r",
+            memo="eeeeee",
+            username=2525
+        )
+
+        todo3 = Todo(
+            title="夕飯用の買い出し",
+            description="今夜の夕飯の買い出し",
+            due_date=datetime.now()+ timedelta(days=2),
+            status=False,
+            link="https://meet.google.com/att-diiz-edw",
+            memo="iiii",
+            username=2525
+        )
+
+        db.add_all([todo1,todo2,todo3])
+        db.commit()
+
+        response = client.get("/api/todo?q=買い出し")
+
+        assert response.status_code == 200
+        print("検索成功")
+
+    finally:
+        db.close()
+
+
+
+
 
 #todoの作成ができるかどうかのテストコード
 def test_todo_create():

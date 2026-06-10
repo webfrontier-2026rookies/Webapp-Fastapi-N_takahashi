@@ -16,7 +16,7 @@ client = TestClient(app)
 
 def test_todo_list_split_by_status():
     """
-    【応用テスト】未完了・完了済みが正しく分かれるかのテスト
+    未完了・完了済みが正しく分かれるかのテスト
     """
     # === 1. Arrange（データの準備） ===
     db = next(get_db())

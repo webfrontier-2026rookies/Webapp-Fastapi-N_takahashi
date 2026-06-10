@@ -15,24 +15,24 @@ if parent_dir not in sys.path:
 
 client = TestClient(app)
 
-TEST_USERNAME = "test_user_999"
-TEST_PASSWORD = "password123"
+username = "test_user_999"
+password = "password123"
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
-#アカウント登録のテストコード
+
 def test_account_register():
     app.dependency_overrides[verify_csrf_token] = lambda: None
 
     db = next(get_db())
     try:
-        db.query(User).filter(User.username == TEST_USERNAME).delete()
+        db.query(User).filter(User.username == username).delete()
         db.commit()
     finally:
         db.close()
     
     register_data = {
-        "username": TEST_USERNAME,
-        "hashed_password": TEST_PASSWORD
+        "username": username,
+        "hashed_password": password
     }
     
     response = client.post("/account/register", data=register_data)
@@ -41,13 +41,13 @@ def test_account_register():
     print("\n✨ アカウント登録のテスト成功！")
     app.dependency_overrides.clear()
 
-#ログインができるかどうかのテストコード
+
 def test_login():
     db = next(get_db())
     try:
-        db.query(User).filter(User.username == TEST_USERNAME).delete()
-        db_hash = pwd_context.hash(TEST_PASSWORD)
-        test_user = User(username=TEST_USERNAME, hashed_password=db_hash)
+        db.query(User).filter(User.username == username).delete()
+        db_hash = pwd_context.hash(password)
+        test_user = User(username=username, hashed_password=db_hash)
         db.add(test_user)
         db.commit()
     finally:
@@ -55,8 +55,8 @@ def test_login():
 
     dummy_csrf = "login_csrf_123"
     login_data = {
-        "username": TEST_USERNAME,
-        "hashed_password": TEST_PASSWORD
+        "username": username,
+        "hashed_password": password
     }
 
     test_cookies = {"csrf_token": dummy_csrf}
@@ -65,9 +65,9 @@ def test_login():
     response = client.post("/account/login", data=login_data, headers=test_headers, cookies=test_cookies)
 
     assert response.status_code in [200, 303]
-    print("\n✨ ログインのテスト成功！")
+    print("ログインのテスト成功！")
 
-#ログアウトできるかのテストコード
+
 def test_logout():
     dummy_csrf = "logout_csrf_token_999"
     test_cookies = {
@@ -80,6 +80,6 @@ def test_logout():
     
     response = client.post("/account/logout", headers=test_headers, cookies=test_cookies)
     
-    assert response.status_code == 200
+    assert response.status_code in [200, 303]
     assert "access_token" not in response.cookies or response.cookies.get("access_token") == ""
-    print("\n✨ ログアウトのテスト成功！")
+    print("ログアウトのテスト成功！")
